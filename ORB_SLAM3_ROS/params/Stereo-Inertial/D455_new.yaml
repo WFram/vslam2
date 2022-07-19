@@ -1,0 +1,123 @@
+%YAML:1.0
+
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. Adjust them!
+#--------------------------------------------------------------------------------------------
+File.version: "1.0"
+
+Camera.type: "PinHole"
+
+# Left Camera calibration and distortion parameters (OpenCV)
+Camera1.fx: 429.2501744355409
+Camera1.fy: 429.4799097134806
+Camera1.cx: 424.87880585127743
+Camera1.cy: 237.0047324325417
+
+# Kannala-Brandt distortion parameters
+Camera1.k1: 0.0054706362205478205
+Camera1.k2: -0.006841784451000569
+Camera1.p1: -0.00023519077296137758
+Camera1.p2: 0.0005962577101979301
+
+# Right Camera calibration and distortion parameters (OpenCV)
+Camera2.fx: 429.1973934124723
+Camera2.fy: 429.3554107624374
+Camera2.cx: 423.6203832194508
+Camera2.cy: 237.93328261451475
+
+# Kannala-Brandt distortion parameters
+Camera2.k1: 0.004652715788461109
+Camera2.k2: -0.004466830084671449
+Camera2.p1: -1.996141335931183e-05
+Camera2.p2: 0.0005124635284586554
+
+# Transformation matrix from right camera to left camera
+Stereo.T_c1_c2: !!opencv-matrix
+    rows: 4
+    cols: 4
+    dt: f
+#    data: [ 0.999983,   0.00445005, 0.00385861,  -0.0950909480452538,
+#        -0.00443664, 0.999984,  -0.00347621, -0.000252007856033742,
+#        -0.00387402, 0.00345903, 0.999986,   -8.87895439518616e-05,
+#        0.0, 0.0, 0.0, 1.0]
+    data: [
+            0.9999979941  ,9.376618602e-05,  -0.002000755749,    0.09532950211,
+        -9.085212356e-05  ,   0.9999989351,   0.001456522044,  3.098142105e-05,
+          0.002000890191  ,-0.001456337349,     0.9999969378, -2.563539376e-05,
+                       0 ,               0,                0,                1]
+
+# Camera resolution
+Camera.width: 848
+Camera.height: 480
+
+# Camera frames per second
+Camera.fps: 30
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 1
+
+# Close/Far threshold. Baseline times.
+Stereo.ThDepth: 40.0
+
+#--------------------------------------------------------------------------------------------
+# IMU Parameters
+#--------------------------------------------------------------------------------------------
+
+# Transformation from body-frame (imu) to left camera
+IMU.T_b_c1: !!opencv-matrix
+    rows: 4
+    cols: 4
+    dt: f
+    # data: [1.0,   0.0,   0.0,  0.0302200000733137,
+    #    0.0,   1.0,   0.0, -0.00740000000223517,
+    #    0.0,   0.0,   1.0, -0.0160199999809265,
+    #    0.0, 0.0, 0.0, 1.0]
+    data: [ 0.99994751, -0.00333568,  0.0096879 , -0.03092805,
+         0.00329404,  0.99998528,  0.00431082,  0.00789154,
+        -0.00970214, -0.00427868,  0.99994378,  0.01662991,
+         0.        ,  0.        ,  0.        ,  1.        ]
+
+# Do not insert KFs when recently lost
+#IMU.InsertKFsWhenLost: 0
+
+# IMU noise
+IMU.NoiseGyro: 1e-2 # 0.000005148030141 # rad/s^0.5
+IMU.NoiseAcc: 1e-1 # 0.000066952452471 # m/s^1.5
+IMU.GyroWalk: 1e-4 # rad/s^1.5
+IMU.AccWalk: 1e-2 # m/s^2.5
+IMU.Frequency: 200.0
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+
+# ORB Extractor: Number of features per image
+ORBextractor.nFeatures: 1000 # Tested with 1250
+
+# ORB Extractor: Scale factor between levels in the scale pyramid
+ORBextractor.scaleFactor: 1.2
+
+# ORB Extractor: Number of levels in the scale pyramid
+ORBextractor.nLevels: 8
+
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast
+ORBextractor.iniThFAST: 15
+ORBextractor.minThFAST: 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#--------------------------------------------------------------------------------------------
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1.0
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize: 2.0
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3.0
+Viewer.ViewpointX: 0.0
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -3.5
+Viewer.ViewpointF: 500.0
+Viewer.imageViewScale: 2.0

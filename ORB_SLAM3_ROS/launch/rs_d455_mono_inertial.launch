@@ -1,0 +1,23 @@
+<launch>
+
+  <node name="vslam2" pkg="vslam2"
+      type="vslam2_mono_inertial" output="screen">
+
+    <param name="Vocab_path" type="string" value="$(find vslam2)/ORB_SLAM3/Vocabulary/ORBvoc.txt" />
+    <param name="Params" type="string" value="$(find vslam2)/ORB_SLAM3_ROS/params/Monocular-Inertial/D455_color.yaml" />
+    <param name="Output_name" type="string" value="zed2" />
+
+    <param name="Visualize" type="bool" value="false" />
+    <param name="Do_Rectify" type="bool" value="false" />
+    <param name="Do_Equalize" type="bool" value="false" />
+    <param name="Do_Resize" type="bool" value="false" />
+
+    <!--    Frame ID-->
+    <param name="pointcloud_frame_id" type="string" value="map" />
+    <param name="world_frame_id" type="string" value="map" />
+
+    <remap from="/camera/image_raw" to="/camera/infra1/image_rect_raw" />
+    <remap from="/imu" to="/camera/imu" />
+
+  </node>
+</launch>

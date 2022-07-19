@@ -1,0 +1,49 @@
+<launch>
+  <!-- <include file="$(find cartographer_ros)/launch/youbot_2d_localization_test.launch" /> -->
+  <include file="$(find zed_wrapper)/launch/zed2.launch" />
+  <!-- <include file="$(find midas_cpp)/launch/midas_cpp_xyzrgb.launch" /> -->
+  <!-- <include file="$(find vslam2)/ORB_SLAM3_ROS/launch/zed2_stereo_inertial.launch" /> -->
+  <!-- <include file="$(find voxblox_ros)/launch/ami_map.launch" /> -->
+  <!-- <include file="$(find slam_toolbox)/launch/localization_youbot.launch" /> -->
+  <!-- <include file="$(find grid_map)/launch/youbot_be2r.launch" /> -->
+  <!-- <include file="$(find kimera_semantics_ros)/launch/zed2_youbot.launch" /> -->
+  <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d /home/ami/slam_ws/src/vslam2/ORB_SLAM3_ROS/rviz/youbot_m_platform.rviz" /> -->
+
+  <node name="nodelet_manager" pkg="nodelet" type="nodelet" args="manager" output="screen"/>
+
+  <node name="cloudify" pkg="nodelet" type="nodelet" 
+          args="load depth_image_proc/point_cloud_xyzrgb nodelet_manager -no-bond" output="screen">
+
+      <remap from="rgb/camera_info"             to="/zed2/zed_node/left/camera_info"/>
+      <remap from="rgb/image_rect_color"        to="/zed2/zed_node/semantics"/>
+      <remap from="depth_registered/image_rect" to="/zed2/zed_node/depth/midas"/>
+
+      <remap from="depth_registered/points"     to="/zed2/zed_node/semantic_pcl/midas"/>
+
+      <param name="queue_size" value="20"/>
+  </node>
+
+   <node pkg="midas_cpp" type="segmentation.py" name="segmentation" output="log" respawn="true">
+        <param name="input_topic" value="/zed2/zed_node/left/image_rect_color"/>
+        <param name="image_input_original_topic" value="/zed2/zed_node/left/image_rect_color"/>
+        <param name="segmentation_topic" value="/zed2/zed_node/semantics"/>
+  </node>
+
+  <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="zed2_left_camera_optical_frame_zed2_left_camera_optical_frame2_broadcaster"
+        args="0.26046 0 0.48866 0 0 0 1 base_link zed2_base_link" /> -->
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="zed2_left_camera_optical_frame_zed2_left_camera_optical_frame2_broadcaster"
+        args="0 0 0 0 0 0 1 zed2_base_link zed2_left_camera_optical_frame" /> -->
+    <!-- <node pkg="tf2_ros" type="static_transform_publisher" name="zed2_left_camera_optical_frame_Left_frame_broadcaster"
+        args="0 0 0 0 0 0 1 zed2_left_camera_optical_frame Left_frame" />
+    <node pkg="tf2_ros" type="static_transform_publisher" name="zed2_left_camera_optical_frame_zed2_camera_frame_broadcaster"
+        args="0.01 0. 0.        0.5 -0.5 0.5 0.5       zed2_left_camera_optical_frame zed2_camera_frame"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="zed2_camera_frame_zed2_base_link_broadcaster"
+        args="0. -0.06 0.        0. 0. 0. 1.       zed2_camera_frame zed2_camera_center"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="zed2_camera_center_zed2_base_link2_broadcaster"
+        args="0. 0. -0.015        0. -0.0249969 0. 0.9996875       zed2_camera_center zed2_base_link2"/>
+    <node pkg="tf2_ros" type="static_transform_publisher" name="zed2_base_link_base_link_broadcaster"
+        args="-0.26046 0. -0.48866        0. 0. 0. 1.       zed2_base_link2 base_link"/> -->
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="world_to_map_broadcaster"
+        args="0 0 0 0 0 0 1 world map" />
+</launch>

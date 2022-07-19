@@ -1,0 +1,190 @@
+<launch>
+<!-- ZED2 Pipeline Stereo-IMU -->
+    <!-- <node name="vslam2" pkg="vslam2"
+        type="vslam2_stereo_inertial_new" output="screen">
+
+        <param name="Vocab_path" type="string" value="$(find vslam2)/ORB_SLAM3/Vocabulary/ORBvoc.txt" />
+        <param name="Params" type="string" value="$(find vslam2)/ORB_SLAM3_ROS/params/Stereo-Inertial/Zed2_iros.yaml" />
+        <param name="Output_name" type="string" value="zed2" />
+
+        <param name="Visualize" type="bool" value="true" />
+
+        <param name="Do_Rectify" type="bool" value="true" />
+        <param name="Do_Equalize" type="bool" value="false" />
+        <param name="Do_Resize" type="bool" value="false" />
+
+        <param name="pointcloud_frame_id" type="string" value="map" />
+        <param name="world_frame_id" type="string" value="world" />
+        <param name="left_camera_frame_id" type="string" value="zed2_left_camera_optical_frame" />
+
+        <param name="target_frame_id" type="string" value="fake_base_link" />
+
+        <remap from="/camera/left/image_raw" to="/zed2/zed_node/left/image_rect_color" />
+        <remap from="/camera/right/image_raw" to="/zed2/zed_node/right/image_rect_color" />
+        <remap from="/imu" to="/zed2/zed_node/imu/data" />
+    </node>
+
+    <node pkg="rosbag" type="play" name="player" 
+        args="-clock -r 1.3 /media/ami/Samsung_T5/SSD_datasets/Sber_2021_june/Sber_courier1/dataset/zed2_mseg_aanet_midas_dpt_kimera_sber.bag"/> -->
+    
+    <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d /home/ami/iros.rviz" required="true"/> -->
+
+
+
+<!-- D455 Pipeline Stereo-IMU without lights -->
+    <!-- <node name="vslam2" pkg="vslam2"
+        type="vslam2_stereo_inertial_new" output="screen">
+
+        <param name="Vocab_path" type="string" value="$(find vslam2)/ORB_SLAM3/Vocabulary/ORBvoc.txt" />
+        <param name="Params" type="string" value="$(find vslam2)/ORB_SLAM3_ROS/params/Stereo-Inertial/D455_iros.yaml" />
+        <param name="Output_name" type="string" value="d455" />
+
+        <param name="Visualize" type="bool" value="true" />
+
+        <param name="Do_Rectify" type="bool" value="true" />
+        <param name="Do_Equalize" type="bool" value="false" />
+        <param name="Do_Resize" type="bool" value="false" />
+
+        <param name="pointcloud_frame_id" type="string" value="map" />
+        <param name="world_frame_id" type="string" value="world" />
+        <param name="left_camera_frame_id" type="string" value="d455_infra1_optical_frame" />
+
+        <param name="target_frame_id" type="string" value="fake_base_link" />
+
+        <remap from="/camera/left/image_raw" to="/d455/infra1/image_rect_raw" />
+        <remap from="/camera/right/image_raw" to="/d455/infra2/image_rect_raw" />
+        <remap from="/imu" to="/d455/imu" />
+    </node>
+
+    <node pkg="rosbag" type="play" name="player" 
+        args="-clock -r 1.0 /media/ami/Samsung_T5/SSD_datasets/Sber_2021_june/Sber_courier2/dataset/d455_mseg_sber_cook.bag"/> -->
+    
+    <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d /home/ami/iros.rviz" required="true"/> -->
+
+
+
+<!-- ZED2 Pipeline Mono-IMU -->
+    <!-- <node name="vslam2" pkg="vslam2"
+        type="vslam2_mono_inertial" output="screen">
+
+        <param name="Vocab_path" type="string" value="$(find vslam2)/ORB_SLAM3/Vocabulary/ORBvoc.txt" />
+        <param name="Params" type="string" value="$(find vslam2)/ORB_SLAM3_ROS/params/Monocular-Inertial/Zed2_iros.yaml" />
+        <param name="Output_name" type="string" value="zed2" />
+
+        <param name="Visualize" type="bool" value="true" />
+
+        <param name="Do_Rectify" type="bool" value="true" />
+        <param name="Do_Equalize" type="bool" value="false" />
+        <param name="Do_Resize" type="bool" value="false" />
+
+        <param name="pointcloud_frame_id" type="string" value="map" />
+        <param name="world_frame_id" type="string" value="world" />
+        <param name="left_camera_frame_id" type="string" value="zed2_left_camera_optical_frame" />
+
+        <param name="target_frame_id" type="string" value="fake_base_link" />
+
+        <remap from="/camera/image_raw" to="/zed2/zed_node/left/image_rect_color" />
+        <remap from="/imu" to="/zed2/zed_node/imu/data" />
+    </node>
+
+    <node pkg="rosbag" type="play" name="player" 
+        args="-clock -r 1.5 /media/ami/Samsung_T5/SSD_datasets/Sber_2021_june/Sber_courier1/dataset/zed2_mseg_aanet_midas_dpt_kimera_sber.bag"/> -->
+    
+    <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d /home/ami/iros.rviz" required="true"/> -->
+
+
+
+<!-- D455 Pipeline Mono-IMU without lights -->
+    <node name="vslam2" pkg="vslam2"
+        type="vslam2_mono_inertial" output="screen">
+
+        <param name="Vocab_path" type="string" value="$(find vslam2)/ORB_SLAM3/Vocabulary/ORBvoc.txt" />
+        <param name="Params" type="string" value="$(find vslam2)/ORB_SLAM3_ROS/params/Monocular-Inertial/D455_iros.yaml" />
+        <param name="Output_name" type="string" value="d455" />
+
+        <param name="Visualize" type="bool" value="true" />
+
+        <param name="Do_Rectify" type="bool" value="true" />
+        <param name="Do_Equalize" type="bool" value="false" />
+        <param name="Do_Resize" type="bool" value="false" />
+
+        <param name="pointcloud_frame_id" type="string" value="map" />
+        <param name="world_frame_id" type="string" value="world" />
+        <param name="left_camera_frame_id" type="string" value="d455_infra1_optical_frame" />
+
+        <param name="target_frame_id" type="string" value="fake_base_link" />
+
+        <remap from="/camera/image_raw" to="/d455/infra1/image_rect_raw" />
+        <remap from="/imu" to="/d455/imu" />
+    </node>
+
+    <!-- <node pkg="rosbag" type="play" name="player" output="screen"
+        args="-clock -r 1.5 /home/ami/iros/d455_without/d455_mseg_sber_cook_p1.bag \
+        /home/ami/iros/d455_without/d455_mseg_sber_cook_p2.bag \
+        /home/ami/iros/d455_without/d455_mseg_sber_cook_p3_1.bag \
+        /home/ami/iros/d455_without/d455_mseg_sber_cook_p3_2.bag \
+        /home/ami/iros/d455_without/d455_mseg_sber_cook_p4.bag"/> 
+     -->
+    <!-- <node type="rviz" name="rviz" pkg="rviz" args="-d /home/ami/iros.rviz" required="true"/> -->
+
+
+
+
+<!-- D455 Pipeline Stereo -->
+    <!-- <node name="vslam2" pkg="vslam2"
+        type="vslam2_stereo" output="screen">
+
+        <param name="Vocab_path" type="string" value="$(find vslam2)/ORB_SLAM3/Vocabulary/ORBvoc.txt" />
+        <param name="Params" type="string" value="$(find vslam2)/ORB_SLAM3_ROS/params/Stereo/D455_iros.yaml" />
+        <param name="Output_name" type="string" value="d455" />
+
+        <param name="Visualize" type="bool" value="false" />
+
+        <param name="Do_Rectify" type="bool" value="false" />
+        <param name="Do_Equalize" type="bool" value="false" />
+        <param name="Do_Resize" type="bool" value="false" />
+
+        <param name="pointcloud_frame_id" type="string" value="map" />
+        <param name="world_frame_id" type="string" value="world" />
+        <param name="left_camera_frame_id" type="string" value="d455_infra1_optical_frame" />
+
+        <param name="target_frame_id" type="string" value="base_link" />
+
+        <remap from="/camera/left/image_raw" to="/d455/infra1/image_rect_raw" />
+        <remap from="/camera/right/image_raw" to="/d455/infra2/image_rect_raw" />
+    </node>
+
+    <node pkg="rosbag" type="play" name="player" 
+        args="-clock -r 0.5 /media/ami/Samsung_T5/SSD_datasets/Sber_2021_june/Sber_courier1/dataset/d455_mseg_aanet_dpt_midas_sber.bag"/>
+    
+    <node type="rviz" name="rviz" pkg="rviz" args="-d /home/ami/iros.rviz" required="true"/> -->
+
+<!-- D455 Pipeline Mono -->
+    <!-- <node name="vslam2" pkg="vslam2"
+        type="vslam2_mono_old" output="screen">
+
+        <param name="Vocab_path" type="string" value="$(find vslam2)/ORB_SLAM3/Vocabulary/ORBvoc.txt" />
+        <param name="Params" type="string" value="$(find vslam2)/ORB_SLAM3_ROS/params/Monocular/D455_iros.yaml" />
+        <param name="Output_name" type="string" value="d455" />
+
+        <param name="Visualize" type="bool" value="true" />
+
+        <param name="Do_Rectify" type="bool" value="false" />
+        <param name="Do_Equalize" type="bool" value="false" />
+        <param name="Do_Resize" type="bool" value="false" />
+
+        <param name="pointcloud_frame_id" type="string" value="map" />
+        <param name="world_frame_id" type="string" value="world" />
+        <param name="left_camera_frame_id" type="string" value="d455_infra1_optical_frame" />
+
+        <param name="target_frame_id" type="string" value="base_link" />
+
+        <remap from="/camera/image_raw" to="/d455/infra1/image_rect_raw" />
+    </node>
+
+    <node pkg="rosbag" type="play" name="player" 
+        args="-clock -r 0.5 /media/ami/Samsung_T5/SSD_datasets/Sber_2021_june/Sber_courier1/dataset/d455_mseg_aanet_dpt_midas_sber.bag"/>
+    
+    <node type="rviz" name="rviz" pkg="rviz" args="-d /home/ami/iros.rviz" required="true"/> -->
+
+</launch>
