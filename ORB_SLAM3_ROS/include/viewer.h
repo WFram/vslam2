@@ -104,6 +104,9 @@
         void set_advertising();
 
         Sophus::SE3f T_ros_cam_se3_;
+
+        ORB_SLAM3::KeyFrame* pRefKF;
+
     private:
         // moment when we update
         ros::Time stamp_ = ros::Time::now();
@@ -141,6 +144,10 @@
 
         // frame id
         std::string map_frame_id_ = "map";
+
+        int min_observations_;
+        bool only_quality_observations_;
+        int min_local_points_;
 
     private:
         //! Transform robot coord to camera coord

@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 2.4.6)
 
 project(vslam2)
 
+IF (NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE Release)
+ENDIF ()
+
 add_definitions(-std=c++14)
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/ORB_SLAM3_ROS/cmake)
@@ -26,7 +30,8 @@ endif ()
 find_package(Eigen3 3.1.0 REQUIRED)
 find_package(Sophus REQUIRED)
 
-find_package(Pangolin REQUIRED  PATHS /home/vuong/Code/local_lib)
+#find_package(Pangolin REQUIRED  PATHS /home/vuong/Code/local_lib) origin
+find_package(Pangolin REQUIRED)
 
 find_package(DBoW2 REQUIRED)
 if (DBoW2_FOUND)
@@ -104,22 +109,22 @@ target_link_libraries(${PROJECT_NAME}_stereo_inertial_new
         ${LIBS_ROS}
         ${PROJECT_NAME}
         )
-add_executable(${PROJECT_NAME}_mono
-        ORB_SLAM3_ROS/src/ros_mono.cpp
-        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
-
-target_link_libraries(${PROJECT_NAME}_mono
-        ${LIBS_ROS}
-        ${PROJECT_NAME}
-        )
-add_executable(${PROJECT_NAME}_mono_old
-        ORB_SLAM3_ROS/src/ros_mono.cpp
-        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
-
-target_link_libraries(${PROJECT_NAME}_mono_old
-        ${LIBS_ROS}
-        ${PROJECT_NAME}
-        )
+#add_executable(${PROJECT_NAME}_mono
+#        ORB_SLAM3_ROS/src/ros_mono.cpp
+#        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
+#
+#target_link_libraries(${PROJECT_NAME}_mono
+#        ${LIBS_ROS}
+#        ${PROJECT_NAME}
+#        )
+#add_executable(${PROJECT_NAME}_mono_old
+#        ORB_SLAM3_ROS/src/ros_mono.cpp
+#        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
+#
+#target_link_libraries(${PROJECT_NAME}_mono_old
+#        ${LIBS_ROS}
+#        ${PROJECT_NAME}
+#        )
 add_executable(${PROJECT_NAME}_mono_inertial
         ORB_SLAM3_ROS/src/ros_mono_inertial.cpp
         ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
@@ -153,11 +158,11 @@ target_link_libraries(${PROJECT_NAME}_stereo_inertial_offline_new
         ${PROJECT_NAME}
         )
 
-add_executable(${PROJECT_NAME}_mono_inertial_offline_new
-        ORB_SLAM3_ROS/src/ros_mono_inertial_offline_new.cc
-        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
-
-target_link_libraries(${PROJECT_NAME}_mono_inertial_offline_new
-        ${LIBS_ROS}
-        ${PROJECT_NAME}
-        )
+#add_executable(${PROJECT_NAME}_mono_inertial_offline_new
+#        ORB_SLAM3_ROS/src/ros_mono_inertial_offline_new.cc
+#        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
+#
+#target_link_libraries(${PROJECT_NAME}_mono_inertial_offline_new
+#        ${LIBS_ROS}
+#        ${PROJECT_NAME}
+#        )

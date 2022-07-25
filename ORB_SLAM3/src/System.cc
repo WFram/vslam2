@@ -487,6 +487,9 @@ Sophus::SE3f System::TrackMonocular(const cv::Mat& im,
   Sophus::SE3f Tcw =
       mpTracker->GrabImageMonocular(imToFeed, timestamp, filename);
 
+//  pRefKF = mpTracker->mCurrentFrame.mpReferenceKF;
+//    pRefKF = mpTracker->GetReferenceKeyFrame();
+
   unique_lock<mutex> lock2(mMutexState);
   mTrackingState = mpTracker->mState;
   mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;

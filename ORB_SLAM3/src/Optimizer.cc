@@ -3249,6 +3249,8 @@ void Optimizer::InertialOptimization(Map* pMap,
   optimizer.initializeOptimization();
   optimizer.optimize(its);
 
+  std::cout << "Scale is optimized for Mono case" << std::endl;
+
   scale = VS->estimate();
 
   // Recover optimized data
@@ -3563,6 +3565,8 @@ void Optimizer::InertialOptimization(Map* pMap,
   // Recover optimized data
   scale = VS->estimate();
   Rwg = VGDir->estimate().Rwg;
+
+  std::cout << "Scale is refined" << std::endl;
 }
 
 void Optimizer::LocalBundleAdjustment(KeyFrame* pMainKF,

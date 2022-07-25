@@ -1,1 +1,0 @@
-/usr/bin/c++ -fPIC -g -shared -Wl,-soname,libgtest_main.so -o libgtest_main.so CMakeFiles/gtest_main.dir/src/gtest_main.cc.o   -L/home/itmo/Code/cat_ws/src/vslam2/build/gtest/googlemock/gtest/src  -Wl,-rpath,/home/itmo/Code/cat_ws/src/vslam2/build/gtest/googlemock/gtest/src:/home/itmo/Code/cat_ws/src/vslam2/build/gtest/googlemock/gtest -lpthread libgtest.so -lpthread 

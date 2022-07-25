@@ -1,8 +1,0 @@
-prefix=/usr/local
-
-Name: vslam2
-Description: Description of vslam2
-Version: 0.0.0
-Cflags: 
-Libs: -L${prefix}/lib -lvslam2
-Requires: roscpp rospy std_msgs cv_bridge image_transport tf sensor_msgs message_runtime

@@ -160,8 +160,9 @@ cv::Mat VIO::GetImage(const sensor_msgs::ImageConstPtr& img_msg) {
 void VIO::SyncWithImu() {
   while (ros::ok()) {
     cv::Mat image;
+    double timeshift = 0.03356973236020965;
     if (!imgBuf.empty() && !mpImuGb->imuBuf.empty()) {
-      const double tIm = imgBuf.front()->header.stamp.toSec();
+      const double tIm = imgBuf.front()->header.stamp.toSec() + timeshift;
       if (tIm == 0) std::cout << "New image timestamp: " << tIm << std::endl;
 
       // wait until we have IMUs to process
@@ -205,8 +206,10 @@ void VIO::SyncWithImu() {
       if (mbClahe) {
         mClahe->apply(image, image);
       }
-      auto Tcw = mORB_SLAM3->TrackMonocular(image, tIm, vImuMeas);
+      auto Tcw = mORB_SLAM3->TrackMonocular(image, tIm, vImuMeas); // From here we can get a KeyFrame and project all the points on it
+      ORB_SLAM3::KeyFrame* pRefKF = mORB_SLAM3->GetTracker()->mCurrentFrame.mpReferenceKF;
       Update(Tcw, tIm);
+      ros_viewer_->pRefKF = pRefKF;
       num_img++;
       std::chrono::milliseconds tSleep(1);
       std::this_thread::sleep_for(tSleep);

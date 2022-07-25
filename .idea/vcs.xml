@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/catkin_simple" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/catkin_simple/test/scenarios/hello_world/catkin_simple" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/dbow2_catkin" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/g2o_catkin" vcs="Git" />
+  </component>
+</project>

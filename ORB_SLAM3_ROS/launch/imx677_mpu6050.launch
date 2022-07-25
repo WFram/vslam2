@@ -1,0 +1,31 @@
+<launch>
+
+  <node pkg="tf2_ros" type="static_transform_publisher" name="map_world"
+        args="0 0 0 0 0 0 1 map world" />
+
+  <node name="vslam2" pkg="vslam2"
+      type="vslam2_mono_inertial" output="screen">
+
+    <param name="Vocab_path" type="string" value="$(find vslam2)/ORB_SLAM3/Vocabulary/ORBvoc.txt" />
+    <param name="Params" type="string" value="$(find vslam2)/ORB_SLAM3_ROS/params/Monocular-Inertial/IMX677_MPU6050.yaml" />
+    <param name="Output_name" type="string" value="imx677_mpu6050" />
+
+    <param name="Visualize" type="bool" value="false" />
+    <param name="Do_Rectify" type="bool" value="false" />
+    <param name="Do_Equalize" type="bool" value="false" />
+    <param name="Do_Resize" type="bool" value="false" />
+
+    <!--    Frame ID-->
+    <param name="pointcloud_frame_id" type="string" value="map" />
+    <param name="world_frame_id" type="string" value="map" />
+    <param name="camera_link" type="string" value="raspicam" />
+
+    <param name="min_observations" type="int" value="300" />
+    <param name="only_quality_observations" type="bool" value="false" />
+    <param name="min_local_points" type="int" value="10" />
+
+  </node>
+
+  <node type="rviz" name="rviz" pkg="rviz" args="-d $(find vslam2)/ORB_SLAM3_ROS/rviz/rviz_vio.rviz" />
+
+</launch>

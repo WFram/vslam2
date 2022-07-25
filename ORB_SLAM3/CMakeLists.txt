@@ -1,9 +1,12 @@
-cmake_minimum_required(VERSION 2.8...3.20)
+cmake_minimum_required(VERSION 2.8)
 project(ORB_SLAM3)
 
 IF (NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Release)
 ENDIF ()
+
+#set(Pangolin_DIR "/home/wfram/Pangolin_old/build/src")
+#Pangolin_DIR:PATH=/usr/local/lib/cmake/Pangolin
 
 MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
 option(BUILD_EXAMPLES "Build Examples " OFF)
@@ -35,7 +38,8 @@ endif ()
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
-find_package(OpenCV 4 REQUIRED PATHS /home/itmo/Code/local_lib)
+#find_package(OpenCV 4 REQUIRED PATHS /home/itmo/Code/local_lib) origin
+find_package(OpenCV 4.2.0 REQUIRED)
 if (NOT OpenCV_FOUND)
     message(FATAL_ERROR "OpenCV > 4.4 not found.")
 endif ()
@@ -44,7 +48,9 @@ MESSAGE("OPENCV VERSION:")
 MESSAGE(${OpenCV_VERSION})
 
 find_package(Eigen3 3.1.0 REQUIRED)
-find_package(Pangolin REQUIRED  PATHS /home/itmo/Code/local_lib)
+#find_package(Pangolin REQUIRED  PATHS /home/itmo/Code/local_lib)
+#find_package(Pangolin REQUIRED PATHS /home/wfram/local_lib)
+find_package(Pangolin REQUIRED)
 
 find_package(DBoW2 REQUIRED)
 find_package(g2o REQUIRED)
@@ -61,6 +67,7 @@ if (TBB_INTERFACE_VERSION LESS 11004)
 endif ()
 
 include_directories(
+        ${OpenCV_INCLUDE_DIRS}
         ${PROJECT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/include/CameraModels
@@ -147,3 +154,6 @@ target_link_libraries(${PROJECT_NAME}
         ${TBB_LIBRARIES}
         ${Sophus_LIBRARIES}
         )
+
+message("Pangolin lib: " ${Pangolin_LIBRARIES})
+message("Eigen lib: " ${EIGEN3_LIBS})

@@ -278,7 +278,7 @@ void LocalMapping::Run() {
                  (mTinit > 55.0f && mTinit < 55.5f) ||
                  (mTinit > 65.0f && mTinit < 65.5f) ||
                  (mTinit > 75.0f && mTinit < 75.5f))) {
-              if (mbMonocular) ScaleRefinement();
+//              if (mbMonocular) ScaleRefinement();
             }
           }
         }

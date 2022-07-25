@@ -212,6 +212,8 @@ class System {
 
   float GetImageScale();
 
+  Tracking* GetTracker() { return mpTracker; } ;
+
 #ifdef REGISTER_TIMES
   void InsertRectTime(double& time);
   void InsertResizeTime(double& time);
