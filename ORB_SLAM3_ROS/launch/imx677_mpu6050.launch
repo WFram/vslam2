@@ -20,9 +20,10 @@
     <param name="world_frame_id" type="string" value="map" />
     <param name="camera_link" type="string" value="raspicam" />
 
-    <param name="min_observations" type="int" value="300" />
+    <param name="min_observations" type="int" value="150" /> <!-- If judge_optimized, then the number of optimizations -->
     <param name="only_quality_observations" type="bool" value="false" />
-    <param name="min_local_points" type="int" value="10" />
+    <param name="judge_optimized" type="bool" value="false" />
+    <param name="min_local_points" type="int" value="50" />
 
   </node>
 

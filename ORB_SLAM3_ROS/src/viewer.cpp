@@ -18,6 +18,9 @@ void viewer::set_params() {
     if (nh_.hasParam("only_quality_observations"))
         nh_.getParam("only_quality_observations", only_quality_observations_);
 
+    if (nh_.hasParam("judge_optimized"))
+        nh_.getParam("judge_optimized", judge_optimized_);
+
     if (nh_.hasParam("min_local_points"))
         nh_.getParam("min_local_points", min_local_points_);
 
@@ -218,11 +221,18 @@ void viewer::publish_local_map_point(ros::Time& stamp) {
         return;
     }
 
+    // From one side, we have too few points. From another one, we need only stable ones.
+    // How to know if a point position is stable?
+    // 1) From the result of BA? How many times the point position has been optimized? Counter?
+    //      in the Local Mapping LocalBA? LocalInertialBA? It doesn't seem to change the meaning a lot
+    // 2) Scale checking? Knowing that the point is the same, is its coordinates change a lot?
+    // 3) If initial positions for the points are bad, can we make the conditions for triangulation more strict?
+
     const std::set<ORB_SLAM3::MapPoint*>& spLocalMPs = pRefKF->GetMapPoints();
 
     if (spLocalMPs.empty()) return;
 
-    // TODO: Now he publishes the same points. We need to have a look at the vector and keyframe graph.
+    // TODO (3D): Now he publishes the same points. We need to have a look at the vector and keyframe graph.
     // Maybe new KFs are not showing up. Or just there should be another way to get the most recent KF
 
     // Declare and initialize red, green, blue component values
@@ -257,9 +267,15 @@ void viewer::publish_local_map_point(ros::Time& stamp) {
 
     int nRelPts = 0;
     for (auto spLocalMP : spLocalMPs) {
-        if (((spLocalMP->GetFound() >= min_observations_) && !only_quality_observations_) ||
-             (spLocalMP->nObs >= min_observations_) && only_quality_observations_)
-            nRelPts++;
+        if (judge_optimized_) {
+            if (spLocalMP->nOpt >= min_observations_)
+                nRelPts++;
+        }
+        else {
+            if (((spLocalMP->GetFound() >= min_observations_) && !only_quality_observations_) ||
+                (spLocalMP->nObs >= min_observations_) && only_quality_observations_)
+                nRelPts++;
+        }
     }
 
     if (nRelPts < min_local_points_)

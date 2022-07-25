@@ -231,7 +231,7 @@ void LocalMapping::Run() {
 
         // Check redundant local Keyframes
         // this will fix the small number of kfs
-        KeyFrameCulling();
+//        KeyFrameCulling();
 
 #ifdef REGISTER_TIMES
         std::chrono::steady_clock::time_point time_EndKFCulling =
@@ -416,7 +416,7 @@ void LocalMapping::CreateNewMapPoints() {
   // Retrieve neighbor keyframes in covisibility graph
   int nn = 10;
   // For stereo inertial case
-  if (mbMonocular) nn = 30;
+  if (mbMonocular) nn = 30; // TODO (3D): What if we use more neighbors?
   vector<KeyFrame*> vpNeighKFs =
       mpCurrentKeyFrame->GetBestCovisibilityKeyFrames(nn);
 
@@ -677,7 +677,7 @@ void LocalMapping::CreateNewMapPoints() {
           continue;
       }
 
-      // Check scale consistency
+      // Check scale consistency TODO
       Eigen::Vector3f normal1 = x3D - Ow1;
       float dist1 = normal1.norm();
 

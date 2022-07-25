@@ -2453,7 +2453,7 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF,
 
   int N = vpOptimizableKFs.size();
 
-  // Optimizable points seen by temporal optimizable keyframes
+  // Optimizable points seen by temporal optimizable keyframes TODO (3D)
   list<MapPoint*> lLocalMapPoints;
   for (int i = 0; i < N; i++) {
     vector<MapPoint*> vpMPs = vpOptimizableKFs[i]->GetMapPointMatches();
@@ -3010,7 +3010,8 @@ void Optimizer::LocalInertialBA(KeyFrame* pKF,
     g2o::VertexSBAPointXYZ* vPoint = static_cast<g2o::VertexSBAPointXYZ*>(
         optimizer.vertex(pMP->mnId + iniMPid + 1));
     pMP->SetWorldPos(vPoint->estimate().cast<float>());
-    pMP->UpdateNormalAndDepth();
+    pMP->UpdateNormalAndDepth(); // TODO (3D) Judge here the point was optimized
+    pMP->nOpt++;
   }
 
   pMap->IncreaseChangeIndex();

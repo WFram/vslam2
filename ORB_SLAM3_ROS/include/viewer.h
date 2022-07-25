@@ -147,6 +147,7 @@
 
         int min_observations_;
         bool only_quality_observations_;
+        bool judge_optimized_;
         int min_local_points_;
 
     private:

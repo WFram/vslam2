@@ -5,7 +5,7 @@ IF (NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Release)
 ENDIF ()
 
-#set(Pangolin_DIR "/home/wfram/Pangolin_old/build/src")
+set(Pangolin_DIR "/home/wfram/Pangolin/build/src")
 #Pangolin_DIR:PATH=/usr/local/lib/cmake/Pangolin
 
 MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
@@ -49,8 +49,8 @@ MESSAGE(${OpenCV_VERSION})
 
 find_package(Eigen3 3.1.0 REQUIRED)
 #find_package(Pangolin REQUIRED  PATHS /home/itmo/Code/local_lib)
-#find_package(Pangolin REQUIRED PATHS /home/wfram/local_lib)
-find_package(Pangolin REQUIRED)
+find_package(Pangolin REQUIRED PATHS /home/wfram/Pangolin/build/src)
+#find_package(Pangolin REQUIRED)
 
 find_package(DBoW2 REQUIRED)
 find_package(g2o REQUIRED)

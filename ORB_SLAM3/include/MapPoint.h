@@ -167,6 +167,7 @@ class MapPoint {
   long int mnFirstKFid;
   long int mnFirstFrame;
   int nObs;
+  int nOpt;
 
   // Variables used by the tracking
   float mTrackProjX;
