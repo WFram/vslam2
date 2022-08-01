@@ -32,6 +32,7 @@
 #include "ORBVocabulary.h"
 #include "KeyFrameDatabase.h"
 #include "ORBextractor.h"
+#include "GCNextractor.h"
 #include "MapDrawer.h"
 #include "System.h"
 #include "ImuTypes.h"
@@ -291,6 +292,11 @@ namespace ORB_SLAM3 {
         //ORB
         ORBextractor *mpORBextractorLeft, *mpORBextractorRight;
         ORBextractor *mpIniORBextractor;
+        GCNextractor* mpGCNextractor;
+        GCNextractor* mpIniGCNextractor;
+
+        // Use ORB or GCNv2
+        bool mbUseORB;
 
         //BoW
         ORBVocabulary *mpORBVocabulary;

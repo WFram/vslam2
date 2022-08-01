@@ -619,11 +619,15 @@ void Tracking::PrintTimeStats() {
         mbRGB = settings->rgb();
 
         // ORB parameters
+        mbUseORB = settings->useORB();
         int nFeatures = settings->nFeatures();
         int nLevels = settings->nLevels();
         int fIniThFAST = settings->initThFAST();
         int fMinThFAST = settings->minThFAST();
         float fScaleFactor = settings->scaleFactor();
+
+        mpGCNextractor = new GCNextractor(
+                nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
 
         mpORBextractorLeft = new ORBextractor(
                 nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
@@ -632,9 +636,12 @@ void Tracking::PrintTimeStats() {
             mpORBextractorRight = new ORBextractor(
                     nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
 
-        if (mSensor == System::MONOCULAR || mSensor == System::IMU_MONOCULAR)
+        if (mSensor == System::MONOCULAR || mSensor == System::IMU_MONOCULAR) {
+            mpIniGCNextractor = new GCNextractor(
+                    5 * nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
             mpIniORBextractor = new ORBextractor(
                     5 * nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
+        }
 
         // IMU parameters
         Sophus::SE3f Tbc = settings->Tbc();
@@ -647,7 +654,7 @@ void Tracking::PrintTimeStats() {
         float Naw = settings->accWalk();
 
         const float sf = sqrt(mImuFreq);
-        mpImuCalib = new IMU::Calib(Tbc, Ng * sf, Na * sf, Ngw / sf, Naw / sf);
+        mpImuCalib = new IMU::Calib(Tbc, Ng * sf, Na * sf, Ngw / sf, Naw / sf); //  => rad/s and m/s^2
 
         mpImuPreintegratedFromLastKF =
                 new IMU::Preintegrated(IMU::Bias(), *mpImuCalib);
@@ -1182,7 +1189,17 @@ void Tracking::PrintTimeStats() {
         int nFeatures, nLevels, fIniThFAST, fMinThFAST;
         float fScaleFactor;
 
-        cv::FileNode node = fSettings["ORBextractor.nFeatures"];
+        cv::FileNode node = fSettings["ORBextractor.useORB"];
+        if (!node.empty() && node.isInt()) {
+            mbUseORB = (bool) node.operator int();
+        } else {
+            std::cerr << "*ORBextractor.use parameter doesn't exist or is not a "
+                         "boolean*"
+                      << std::endl;
+            b_miss_params = true;
+        }
+
+        node = fSettings["ORBextractor.nFeatures"];
         if (!node.empty() && node.isInt()) {
             nFeatures = node.operator int();
         } else {
@@ -1236,6 +1253,9 @@ void Tracking::PrintTimeStats() {
             return false;
         }
 
+        mpGCNextractor = new GCNextractor(
+                nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
+
         mpORBextractorLeft = new ORBextractor(
                 nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
 
@@ -1243,9 +1263,13 @@ void Tracking::PrintTimeStats() {
             mpORBextractorRight = new ORBextractor(
                     nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
 
-        if (mSensor == System::MONOCULAR || mSensor == System::IMU_MONOCULAR)
+        if (mSensor == System::MONOCULAR || mSensor == System::IMU_MONOCULAR) {
+            mpIniGCNextractor = new GCNextractor(
+                    5 * nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
             mpIniORBextractor = new ORBextractor(
                     5 * nFeatures, fScaleFactor, nLevels, fIniThFAST, fMinThFAST);
+        }
+
 
         cout << endl << "ORB Extractor Parameters: " << endl;
         cout << "- Number of Features: " << nFeatures << endl;
@@ -1562,49 +1586,98 @@ void Tracking::PrintTimeStats() {
                 cvtColor(mImGray, mImGray, cv::COLOR_BGRA2GRAY);
         }
 
-        if (mSensor == System::MONOCULAR) {
-            if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET ||
-                (lastID - initID) < mMaxFrames)
-                mCurrentFrame = Frame(mImGray,
-                                      timestamp,
-                                      mpIniORBextractor,
-                                      mpORBVocabulary,
-                                      mpCamera,
-                                      mDistCoef,
-                                      mbf,
-                                      mThDepth);
-            else
-                mCurrentFrame = Frame(mImGray,
-                                      timestamp,
-                                      mpORBextractorLeft,
-                                      mpORBVocabulary,
-                                      mpCamera,
-                                      mDistCoef,
-                                      mbf,
-                                      mThDepth);
-        } else if (mSensor == System::IMU_MONOCULAR) {
-            if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET) {
-                mCurrentFrame = Frame(mImGray,
-                                      timestamp,
-                                      mpIniORBextractor,
-                                      mpORBVocabulary,
-                                      mpCamera,
-                                      mDistCoef,
-                                      mbf,
-                                      mThDepth,
-                                      &mLastFrame,
-                                      *mpImuCalib);
-            } else
-                mCurrentFrame = Frame(mImGray,
-                                      timestamp,
-                                      mpORBextractorLeft,
-                                      mpORBVocabulary,
-                                      mpCamera,
-                                      mDistCoef,
-                                      mbf,
-                                      mThDepth,
-                                      &mLastFrame,
-                                      *mpImuCalib);
+//        cv::resize(mImGray, mImGray, cv::Size(640, 480));
+
+        if (!mbUseORB) {
+            if (mSensor == System::MONOCULAR) {
+                if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET ||
+                    (lastID - initID) < mMaxFrames)
+                    mCurrentFrame = Frame(mImGray,
+                                          timestamp,
+                                          mpIniGCNextractor,
+                                          mpORBVocabulary,
+                                          mpCamera,
+                                          mDistCoef,
+                                          mbf,
+                                          mThDepth);
+                else
+                    mCurrentFrame = Frame(mImGray,
+                                          timestamp,
+                                          mpGCNextractor,
+                                          mpORBVocabulary,
+                                          mpCamera,
+                                          mDistCoef,
+                                          mbf,
+                                          mThDepth);
+            } else if (mSensor == System::IMU_MONOCULAR) {
+                if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET) {
+                    mCurrentFrame = Frame(mImGray,
+                                          timestamp,
+                                          mpIniGCNextractor,
+                                          mpORBVocabulary,
+                                          mpCamera,
+                                          mDistCoef,
+                                          mbf,
+                                          mThDepth,
+                                          &mLastFrame,
+                                          *mpImuCalib);
+                } else
+                    mCurrentFrame = Frame(mImGray,
+                                          timestamp,
+                                          mpGCNextractor,
+                                          mpORBVocabulary,
+                                          mpCamera,
+                                          mDistCoef,
+                                          mbf,
+                                          mThDepth,
+                                          &mLastFrame,
+                                          *mpImuCalib);
+            }
+        } else {
+            if (mSensor == System::MONOCULAR) {
+                if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET ||
+                    (lastID - initID) < mMaxFrames)
+                    mCurrentFrame = Frame(mImGray,
+                                          timestamp,
+                                          mpIniORBextractor,
+                                          mpORBVocabulary,
+                                          mpCamera,
+                                          mDistCoef,
+                                          mbf,
+                                          mThDepth);
+                else
+                    mCurrentFrame = Frame(mImGray,
+                                          timestamp,
+                                          mpORBextractorLeft,
+                                          mpORBVocabulary,
+                                          mpCamera,
+                                          mDistCoef,
+                                          mbf,
+                                          mThDepth);
+            } else if (mSensor == System::IMU_MONOCULAR) {
+                if (mState == NOT_INITIALIZED || mState == NO_IMAGES_YET) {
+                    mCurrentFrame = Frame(mImGray,
+                                          timestamp,
+                                          mpIniORBextractor,
+                                          mpORBVocabulary,
+                                          mpCamera,
+                                          mDistCoef,
+                                          mbf,
+                                          mThDepth,
+                                          &mLastFrame,
+                                          *mpImuCalib);
+                } else
+                    mCurrentFrame = Frame(mImGray,
+                                          timestamp,
+                                          mpORBextractorLeft,
+                                          mpORBVocabulary,
+                                          mpCamera,
+                                          mDistCoef,
+                                          mbf,
+                                          mThDepth,
+                                          &mLastFrame,
+                                          *mpImuCalib);
+            }
         }
 
         if (mState == NO_IMAGES_YET) t0 = timestamp;
@@ -2090,30 +2163,37 @@ void Tracking::PrintTimeStats() {
                 if (bOK) {
                     bOK = TrackLocalMap();
                 }
-                if (!bOK) cout << "Fail to track local map!" << endl;
+                if (!bOK) {
+                    cout << "Fail to track local map! Predict IMU state" << endl;
+//                    bOK = TrackWithMotionModel();
+//                    PredictStateIMU();
+                }
             } else {
                 // mbVO true means that there are few matches to MapPoints in the map. We
                 // cannot retrieve a local map and therefore we do not perform
                 // TrackLocalMap(). Once the system relocalizes the camera we will use the
                 // local map again.
-                if (bOK && !mbVO) bOK = TrackLocalMap();
+                if (bOK && !mbVO)
+                    bOK = TrackLocalMap();
+//                else
+//                    PredictStateIMU();
             }
 
             if (bOK)
                 mState = OK;
             else if (mState == OK) {
-//      if (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO ||
-//          mSensor == System::IMU_RGBD) {
-//        Verbose::PrintMess("Track lost for less than one second...",
-//                           Verbose::VERBOSITY_NORMAL);
-//        if (!pCurrentMap->isImuInitialized()) {
-//          cout << "IMU is not or recently initialized. Reseting active map..."
-//               << endl;
-//          mpSystem->ResetActiveMap();
-//        }
-//
-//        mState = RECENTLY_LOST;
-//      } else
+      if (mSensor == System::IMU_MONOCULAR || mSensor == System::IMU_STEREO ||
+          mSensor == System::IMU_RGBD) {
+        Verbose::PrintMess("Track lost for less than one second...",
+                           Verbose::VERBOSITY_NORMAL);
+        if (!pCurrentMap->isImuInitialized()) {
+          cout << "IMU is not or recently initialized. Reseting active map..."
+               << endl;
+          mpSystem->ResetActiveMap();
+        }
+
+        mState = RECENTLY_LOST;
+      } else
                 mState = RECENTLY_LOST;  // visual to lost
 
                 /*if(mCurrentFrame.mnId>mnLastRelocFrameId+mMaxFrames)
@@ -2536,12 +2616,12 @@ void Tracking::PrintTimeStats() {
         float medianDepth = pKFini->ComputeSceneMedianDepth(2);
         float invMedianDepth;
         if (mSensor == System::IMU_MONOCULAR)
-            invMedianDepth = 4.0f / medianDepth;  // 4.0f
+            invMedianDepth = 4.0f / medianDepth;  // 4.0f TODO (3D)
         else
             invMedianDepth = 1.0f / medianDepth;
 
         if (medianDepth < 0 ||
-            pKFcur->TrackedMapPoints(1) < 50)  // TODO Check, originally 100 tracks
+            pKFcur->TrackedMapPoints(1) < 50)  // TODO (3D) Check, originally 100 tracks
         {
             Verbose::PrintMess("Wrong initialization, reseting...",
                                Verbose::VERBOSITY_QUIET);
@@ -2968,14 +3048,17 @@ void Tracking::PrintTimeStats() {
         // More restrictive if there was a relocalization recently
         mpLocalMapper->mnMatchesInliers = mnMatchesInliers;
         if (mCurrentFrame.mnId < mnLastRelocFrameId + mMaxFrames &&
-            mnMatchesInliers < 50)
+            mnMatchesInliers < 50) {
+            std::cout << "Lack of inliers and ids issue" << std::endl;
             return false;
+        }
 
         if ((mnMatchesInliers > 10) && (mState == RECENTLY_LOST)) return true;
 
         if (mSensor == System::IMU_MONOCULAR) {
             if ((mnMatchesInliers < 15 && mpAtlas->isImuInitialized()) ||
                 (mnMatchesInliers < 50 && !mpAtlas->isImuInitialized())) {
+                std::cout << "Lack of inliers. Now " << mnMatchesInliers << std::endl;
                 return false;
             } else
                 return true;

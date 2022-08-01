@@ -36,6 +36,8 @@ else ()
     message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++14 support. Please use a different C++ compiler.")
 endif ()
 
+set(TORCH_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=0")
+
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
 
 #find_package(OpenCV 4 REQUIRED PATHS /home/itmo/Code/local_lib) origin
@@ -66,6 +68,20 @@ if (TBB_INTERFACE_VERSION LESS 11004)
     add_definitions(-DTBB_PREVIEW_GLOBAL_CONTROL)
 endif ()
 
+if (TORCH_PATH)
+    message("TORCH_PATH set to: ${TORCH_PATH}")
+    set(Torch_DIR ${TORCH_PATH})
+else ()
+    message(FATAL_ERROR "Need to specify Torch path, e.g., pytorch/torch/share/cmake/Torch ")
+endif ()
+
+find_package(Torch REQUIRED)
+message(STATUS "Torch version is: ${Torch_VERSION}")
+if (Torch_VERSION GREATER 1.0.1)
+    message(STATUS "Torch version is newer than v1.0.1, will use new api")
+    add_definitions(-DTORCH_NEW_API)
+endif ()
+
 include_directories(
         ${OpenCV_INCLUDE_DIRS}
         ${PROJECT_SOURCE_DIR}
@@ -88,6 +104,7 @@ add_library(${PROJECT_NAME} SHARED
         src/LocalMapping.cc
         src/LoopClosing.cc
         src/ORBextractor.cc
+        src/GCNextractor.cc
         src/ORBmatcher.cc
         src/FrameDrawer.cc
         src/Converter.cc
@@ -116,6 +133,7 @@ add_library(${PROJECT_NAME} SHARED
         include/LocalMapping.h
         include/LoopClosing.h
         include/ORBextractor.h
+        include/GCNextractor.h
         include/ORBmatcher.h
         include/FrameDrawer.h
         include/Converter.h
@@ -148,6 +166,7 @@ target_link_libraries(${PROJECT_NAME}
         ${Pangolin_LIBRARIES}
         ${DBoW2_LIBRARY}
         ${g2o_LIBRARY}
+        ${TORCH_LIBRARIES}
         -lfmt
         -lboost_serialization
         -lcrypto

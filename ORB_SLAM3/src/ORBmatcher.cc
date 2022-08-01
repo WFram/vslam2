@@ -612,147 +612,119 @@ int ORBmatcher::SearchForInitialization(Frame& F1,
                                         vector<cv::Point2f>& vbPrevMatched,
                                         vector<int>& vnMatches12,
                                         int windowSize) {
-  int nmatches = 0;
-  vnMatches12 = vector<int>(F1.mvKeysUn.size(), -1);
+  int nmatches=0;
+        vnMatches12 = vector<int>(F1.mvKeysUn.size(),-1);
 
-  vector<int> rotHist[HISTO_LENGTH];
-  for (int i = 0; i < HISTO_LENGTH; i++) rotHist[i].reserve(500);
-  const float factor = 1.0f / HISTO_LENGTH;
+        vector<int> rotHist[HISTO_LENGTH];
+        for(int i=0;i<HISTO_LENGTH;i++)
+            rotHist[i].reserve(500);
+        const float factor = 1.0f/HISTO_LENGTH;
 
-  vector<int> vMatchedDistance(F2.mvKeysUn.size(), INT_MAX);
-  vector<int> vnMatches21(F2.mvKeysUn.size(), -1);
+        vector<int> vMatchedDistance(F2.mvKeysUn.size(),INT_MAX);
+        vector<int> vnMatches21(F2.mvKeysUn.size(),-1);
 
-  // Traverse the feature points in the initialization frame
-  tbb::parallel_for(
-      tbb::blocked_range<size_t>(0, F1.mvKeysUn.size()),
-      [&](tbb::blocked_range<size_t> rF1mvKeysUn) {
-        for (size_t i1 = rF1mvKeysUn.begin(), iend1 = rF1mvKeysUn.end();
-             i1 < iend1;
-             i1++) {
-          cv::KeyPoint kp1 = F1.mvKeysUn[i1];
-          // Only process the feature points extracted in the 0th layer of the
-          // pyramid, which is the original image
-          int level1 = kp1.octave;
-          if (level1 > 0) continue;
+        for(size_t i1=0, iend1=F1.mvKeysUn.size(); i1<iend1; i1++)
+        {
+            cv::KeyPoint kp1 = F1.mvKeysUn[i1];
+            int level1 = kp1.octave;
+            if(level1>0)
+                continue;
 
-          // Search for the index of the key point that may match the key point
-          // of the initial frame x,y coordinate position
-          // in the range of windowSize (100) in the current frame (F2)
-          // vbPrevMatched stores the coordinates of the key points of the
-          // previous frame vIndices2 is the index value of the key point of the
-          // input (x, y) and the key point distance in F2<windowSize(100)
-          vector<size_t> vIndices2 = F2.GetFeaturesInArea(vbPrevMatched[i1].x,
-                                                          vbPrevMatched[i1].y,
-                                                          windowSize,
-                                                          level1,
-                                                          level1);
+            vector<size_t> vIndices2 = F2.GetFeaturesInArea(vbPrevMatched[i1].x,vbPrevMatched[i1].y, windowSize,level1,level1);
 
-          if (vIndices2.empty()) continue;
+            if(vIndices2.empty())
+                continue;
 
-          // Descriptor corresponding to the key point of kp1 in F1
-          cv::Mat d1 = F1.mDescriptors.row(i1);
+            cv::Mat d1 = F1.mDescriptors.row(i1);
 
-          int bestDist = INT_MAX;
-          int bestDist2 = INT_MAX;
-          int bestIdx2 = -1;
+            int bestDist = INT_MAX;
+            int bestDist2 = INT_MAX;
+            int bestIdx2 = -1;
 
-          // Find the descriptor with the smallest distance between the key
-          // points found in the F2 frame and the F1(x,y) distance <r and the
-          // current key point descriptor of F1
-          for (vector<size_t>::iterator vit = vIndices2.begin();
-               vit != vIndices2.end();
-               vit++) {
-            size_t i2 = *vit;
+            for(vector<size_t>::iterator vit=vIndices2.begin(); vit!=vIndices2.end(); vit++)
+            {
+                size_t i2 = *vit;
 
-            cv::Mat d2 = F2.mDescriptors.row(i2);
+                cv::Mat d2 = F2.mDescriptors.row(i2);
 
-            // Calculate the distance between two descriptors
-            int dist = DescriptorDistance(d1, d2);
+                int dist = DescriptorDistance(d1,d2);
 
-            // Find the first two smallest distances,
-            // dist is first compared with the smallest distance
-            // and then compared with the second smallest distance
-            if (vMatchedDistance[i2] <= dist) continue;
+                if(vMatchedDistance[i2]<=dist)
+                    continue;
 
-            if (dist < bestDist) {
-              bestDist2 = bestDist;
-              bestDist = dist;
-              bestIdx2 = i2;
-            } else if (dist < bestDist2) {
-              bestDist2 = dist;
+                if(dist<bestDist)
+                {
+                    bestDist2=bestDist;
+                    bestDist=dist;
+                    bestIdx2=i2;
+                }
+                else if(dist<bestDist2)
+                {
+                    bestDist2=dist;
+                }
             }
-          }
 
-          // TH_LOW==50, if that the minimum distance is less than the threshold
-          // 50
-          if (bestDist <= TH_LOW) {
-            // Check that the minimum distance is less than the second smallest
-            // distance multiplied by mfNNratio=0.9
-            if (bestDist < (float)bestDist2 * mfNNratio) {
-              // If it has been matched, there will be two correspondences,
-              // remove the match
-              if (vnMatches21[bestIdx2] >= 0) {
-                vnMatches12[vnMatches21[bestIdx2]] = -1;
-                nmatches--;
-              }
+            if(bestDist<=TH_LOW)
+            {
+                if(bestDist<(float)bestDist2*mfNNratio)
+                {
+                    if(vnMatches21[bestIdx2]>=0)
+                    {
+                        vnMatches12[vnMatches21[bestIdx2]]=-1;
+                        nmatches--;
+                    }
+                    vnMatches12[i1]=bestIdx2;
+                    vnMatches21[bestIdx2]=i1;
+                    vMatchedDistance[bestIdx2]=bestDist;
+                    nmatches++;
 
-              // bestIdx2 stores the index value with the smallest distance
-              // between F2 and F1 currently traversed key point descriptor Then
-              // vnMatches12[i1] stores the index of the key point in F1 as the
-              // index of the key point in F2 corresponding to i1
-              vnMatches12[i1] = bestIdx2;
-              // vnMatches21[i1] stores the index value of the key point in F1
-              // corresponding to the key point in F2 whose index is bestIdx2
-              vnMatches21[bestIdx2] = i1;
-              // vMatchedDistance[bestIdx2] represents the distance between the
-              // key point with index bestIdx2 in F2 and the key point with the
-              // smallest descriptor distance in F1
-              vMatchedDistance[bestIdx2] = bestDist;
-              nmatches++;
-
-              if (mbCheckOrientation) {
-                // rot is the direction difference of the key point
-                float rot = F1.mvKeysUn[i1].angle - F2.mvKeysUn[bestIdx2].angle;
-                if (rot < 0.0) rot += 360.0f;
-                int bin = round(
-                    rot * factor);  // factor by 1/30 and rounded to get bin
-                if (bin == HISTO_LENGTH)  // If bin is equal to 30, set bin to 0
-                  bin = 0;
-                assert(bin >= 0 && bin < HISTO_LENGTH);
-                // The location of the bin in rotHist stores the index value of
-                // the key point in F1
-                rotHist[bin].push_back(i1);
-              }
+                    if(mbCheckOrientation)
+                    {
+                        float rot = F1.mvKeysUn[i1].angle-F2.mvKeysUn[bestIdx2].angle;
+                        if(rot<0.0)
+                            rot+=360.0f;
+                        int bin = round(rot*factor);
+                        if(bin==HISTO_LENGTH)
+                            bin=0;
+                        assert(bin>=0 && bin<HISTO_LENGTH);
+                        rotHist[bin].push_back(i1);
+                    }
+                }
             }
-          }
+
         }
-      });
 
-  if (mbCheckOrientation) {
-    int ind1 = -1;
-    int ind2 = -1;
-    int ind3 = -1;
+        if(mbCheckOrientation)
+        {
+            int ind1=-1;
+            int ind2=-1;
+            int ind3=-1;
 
-    ComputeThreeMaxima(rotHist, HISTO_LENGTH, ind1, ind2, ind3);
+            ComputeThreeMaxima(rotHist,HISTO_LENGTH,ind1,ind2,ind3);
 
-    for (int i = 0; i < HISTO_LENGTH; i++) {
-      if (i == ind1 || i == ind2 || i == ind3) continue;
-      for (size_t j = 0, jend = rotHist[i].size(); j < jend; j++) {
-        int idx1 = rotHist[i][j];
-        if (vnMatches12[idx1] >= 0) {
-          vnMatches12[idx1] = -1;
-          nmatches--;
+            for(int i=0; i<HISTO_LENGTH; i++)
+            {
+                if(i==ind1 || i==ind2 || i==ind3)
+                    continue;
+                for(size_t j=0, jend=rotHist[i].size(); j<jend; j++)
+                {
+                    int idx1 = rotHist[i][j];
+                    if(vnMatches12[idx1]>=0)
+                    {
+                        vnMatches12[idx1]=-1;
+                        nmatches--;
+                    }
+                }
+            }
+
         }
-      }
-    }
-  }
 
-  // Update prev matched
-  for (size_t i1 = 0, iend1 = vnMatches12.size(); i1 < iend1; i1++)
-    if (vnMatches12[i1] >= 0)
-      vbPrevMatched[i1] = F2.mvKeysUn[vnMatches12[i1]].pt;
+        //Update prev matched
+        for(size_t i1=0, iend1=vnMatches12.size(); i1<iend1; i1++)
+            if(vnMatches12[i1]>=0)
+                vbPrevMatched[i1]=F2.mvKeysUn[vnMatches12[i1]].pt;
 
-  return nmatches;
+        return nmatches;
 }
 
 int ORBmatcher::SearchByBoW(KeyFrame* pKF1,

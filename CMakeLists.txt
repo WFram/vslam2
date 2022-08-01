@@ -51,6 +51,26 @@ if (TBB_INTERFACE_VERSION LESS 11004)
     # enable global_control header for earlier TBB versions (Ubuntu 16.04, 18.04)
     add_definitions(-DTBB_PREVIEW_GLOBAL_CONTROL)
 endif ()
+
+set(TORCH_PATH "/home/wfram/GCNv2_SLAM/Thirdparty/pytorch/torch/share/cmake/Torch")
+message("TORCH_PATH: " ${TORCH_PATH})
+
+set(TORCH_CXX_FLAGS "-D_GLIBCXX_USE_CXX11_ABI=0")
+
+if (TORCH_PATH)
+    message("TORCH_PATH set to: ${TORCH_PATH}")
+    set(Torch_DIR ${TORCH_PATH})
+else ()
+    message(FATAL_ERROR "Need to specify Torch path, e.g., pytorch/torch/share/cmake/Torch ")
+endif ()
+
+find_package(Torch REQUIRED)
+message(STATUS "Torch version is: ${Torch_VERSION}")
+if (Torch_VERSION GREATER 1.0.1)
+    message(STATUS "Torch version is newer than v1.0.1, will use new api")
+    add_definitions(-DTORCH_NEW_API)
+endif ()
+
 set(LIBS_ROS
         ${DBoW2_LIBRARY}
         ${g2o_LIBRARY}
@@ -62,6 +82,7 @@ set(LIBS_ROS
         -lcrypto
         ${Pangolin_LIBRARIES}
         ${TBB_LIBRARIES}
+        ${TORCH_LIBRARIES}
         -lfmt
         )
 
@@ -93,30 +114,30 @@ include_directories(
         ${TBB_INCLUDE_DIR}
 )
 
-add_executable(${PROJECT_NAME}_stereo_inertial
-        ORB_SLAM3_ROS/src/ros_stereo_inertial.cc
-        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
-
-target_link_libraries(${PROJECT_NAME}_stereo_inertial
-        ${LIBS_ROS}
-        ${PROJECT_NAME}
-        )
-add_executable(${PROJECT_NAME}_stereo_inertial_new
-        ORB_SLAM3_ROS/src/ros_stereo_inertial_new.cpp
-        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
-
-target_link_libraries(${PROJECT_NAME}_stereo_inertial_new
-        ${LIBS_ROS}
-        ${PROJECT_NAME}
-        )
-#add_executable(${PROJECT_NAME}_mono
-#        ORB_SLAM3_ROS/src/ros_mono.cpp
+#add_executable(${PROJECT_NAME}_stereo_inertial
+#        ORB_SLAM3_ROS/src/ros_stereo_inertial.cc
 #        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
 #
-#target_link_libraries(${PROJECT_NAME}_mono
+#target_link_libraries(${PROJECT_NAME}_stereo_inertial
 #        ${LIBS_ROS}
 #        ${PROJECT_NAME}
 #        )
+#add_executable(${PROJECT_NAME}_stereo_inertial_new
+#        ORB_SLAM3_ROS/src/ros_stereo_inertial_new.cpp
+#        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
+#
+#target_link_libraries(${PROJECT_NAME}_stereo_inertial_new
+#        ${LIBS_ROS}
+#        ${PROJECT_NAME}
+#        )
+add_executable(${PROJECT_NAME}_mono
+        ORB_SLAM3_ROS/src/ros_mono.cpp
+        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
+
+target_link_libraries(${PROJECT_NAME}_mono
+        ${LIBS_ROS}
+        ${PROJECT_NAME}
+        )
 #add_executable(${PROJECT_NAME}_mono_old
 #        ORB_SLAM3_ROS/src/ros_mono.cpp
 #        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
@@ -133,14 +154,14 @@ target_link_libraries(${PROJECT_NAME}_mono_inertial
         ${LIBS_ROS}
         ${PROJECT_NAME}
         )
-add_executable(${PROJECT_NAME}_stereo
-        ORB_SLAM3_ROS/src/ros_stereo.cc
-        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
-
-target_link_libraries(${PROJECT_NAME}_stereo
-        ${LIBS_ROS}
-        ${PROJECT_NAME}
-        )
+#add_executable(${PROJECT_NAME}_stereo
+#        ORB_SLAM3_ROS/src/ros_stereo.cc
+#        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
+#
+#target_link_libraries(${PROJECT_NAME}_stereo
+#        ${LIBS_ROS}
+#        ${PROJECT_NAME}
+#        )
 # add_executable(${PROJECT_NAME}_stereo_offline
 #         ORB_SLAM3_ROS/src/ros_stereo_offline.cc
 #         ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
@@ -149,14 +170,14 @@ target_link_libraries(${PROJECT_NAME}_stereo
 #         ${LIBS_ROS}
 #         ${PROJECT_NAME}
 #         )
-add_executable(${PROJECT_NAME}_stereo_inertial_offline_new
-        ORB_SLAM3_ROS/src/ros_stereo_inertial_offline_new.cc
-        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
-
-target_link_libraries(${PROJECT_NAME}_stereo_inertial_offline_new
-        ${LIBS_ROS}
-        ${PROJECT_NAME}
-        )
+#add_executable(${PROJECT_NAME}_stereo_inertial_offline_new
+#        ORB_SLAM3_ROS/src/ros_stereo_inertial_offline_new.cc
+#        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
+#
+#target_link_libraries(${PROJECT_NAME}_stereo_inertial_offline_new
+#        ${LIBS_ROS}
+#        ${PROJECT_NAME}
+#        )
 
 #add_executable(${PROJECT_NAME}_mono_inertial_offline_new
 #        ORB_SLAM3_ROS/src/ros_mono_inertial_offline_new.cc
@@ -166,3 +187,9 @@ target_link_libraries(${PROJECT_NAME}_stereo_inertial_offline_new
 #        ${LIBS_ROS}
 #        ${PROJECT_NAME}
 #        )
+
+add_executable(imu_rls ORB_SLAM3_ROS/src/imu_rls.cpp)
+target_link_libraries(imu_rls ${catkin_LIBRARIES} ${EIGEN3_LIBS})
+
+add_executable(imu_sliding_average ORB_SLAM3_ROS/src/imu_sliding_average.cpp)
+target_link_libraries(imu_sliding_average ${catkin_LIBRARIES} ${EIGEN3_LIBS})

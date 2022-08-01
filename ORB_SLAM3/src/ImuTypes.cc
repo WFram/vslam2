@@ -388,21 +388,21 @@ std::ostream& operator<<(std::ostream& out, const Bias& b) {
 }
 
 void Calib::Set(const Sophus::SE3<float>& sophTbc,
-                const float& ng,
-                const float& na,
-                const float& ngw,
-                const float& naw) {
+                const float& ng,    // rad/s
+                const float& na,    // m/s^2
+                const float& ngw,   // rad/s
+                const float& naw) { // m/s^2
   mbIsSet = true;
-  const float ng2 = ng * ng;
-  const float na2 = na * na;
-  const float ngw2 = ngw * ngw;
-  const float naw2 = naw * naw;
+  const float ng2 = ng * ng; // rad/s * rad/s
+  const float na2 = na * na; // m/s^2 * m/s^2
+  const float ngw2 = ngw * ngw; // rad/s * rad/s
+  const float naw2 = naw * naw; // m/s^2 * m/s^2
 
   // Sophus/Eigen
   mTbc = sophTbc;
   mTcb = mTbc.inverse();
-  Cov.diagonal() << ng2, ng2, ng2, na2, na2, na2;
-  CovWalk.diagonal() << ngw2, ngw2, ngw2, naw2, naw2, naw2;
+  Cov.diagonal() << ng2, ng2, ng2, na2, na2, na2; // rad/s * rad/s * ; m/s^2 * m/s^2
+  CovWalk.diagonal() << ngw2, ngw2, ngw2, naw2, naw2, naw2; // rad/s * rad/s * ; m/s^2 * m/s^2
 }
 
 Calib::Calib(const Calib& calib) {
