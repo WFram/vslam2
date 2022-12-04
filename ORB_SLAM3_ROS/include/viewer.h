@@ -107,6 +107,9 @@
 
         ORB_SLAM3::KeyFrame* pRefKF;
 
+        // pose
+        Sophus::SE3f mTcw;
+
     private:
         // moment when we update
         ros::Time stamp_ = ros::Time::now();

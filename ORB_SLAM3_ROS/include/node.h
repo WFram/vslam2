@@ -39,117 +39,128 @@
 // From TBB
 #include <tbb/parallel_for.h>
 
+#include "utils/CameraPoseVisualization.h"
+
 class node {
- public:
-  node(ORB_SLAM3::System::eSensor sensor,
-       ros::NodeHandle& node_handle,
-       image_transport::ImageTransport& image_transport,
-       std::string strOutput = std::string());
-  ~node();
+public:
+    node(ORB_SLAM3::System::eSensor sensor,
+         ros::NodeHandle &node_handle,
+         image_transport::ImageTransport &image_transport,
+         std::string strOutput = std::string());
 
-  // Advertise publish topics
-  void Init();
+    ~node();
 
-  // Saved trajectory and map as bag file
-  bool SaveTrajectoryBag(const std::string& file_path);
-  
-  viewer* ros_viewer_ = nullptr;
+    // Advertise publish topics
+    void Init();
 
- protected:
-  // Update state and publish data
-  void Update(Sophus::SE3f Tcw, double timestamp = 0);
-  // Pointer to ORB_SLAM3 threads
-  // System
-  ORB_SLAM3::System* mORB_SLAM3;
-  // Tracking
-  ORB_SLAM3::Tracking* mpTracking{};
-  // Local Mapping
-  ORB_SLAM3::LocalMapping* mpLocalMapping;  // Used
-  // Loop Closing
-  //  ORB_SLAM3::LoopClosing* mpLoopClosing{};
-  // Map Drawer
-  ORB_SLAM3::MapDrawer* mpMapDrawer{};  // Used
-  // Atlas
-  ORB_SLAM3::Atlas* mpAtlas{};  // Used
+    // Saved trajectory and map as bag file
+    bool SaveTrajectoryBag(const std::string &file_path);
 
-  // ORB_SLAM3 variables
-  ORB_SLAM3::System::eSensor mSensor;
-  // Path variables
-  std::string strOutputFile;
+    viewer *ros_viewer_ = nullptr;
 
-  std::string left_cam_frame_id_;
- private:
-  // Functions for Publish
-  void PublishPoseAsTransform(const Sophus::SE3f& Twc, double timestamp);
-  void PublishPoseAsOdometry(const Sophus::SE3d& Twc, double timestamp);
-  void PublishMapPointsAsPCL2(std::vector<ORB_SLAM3::MapPoint*> vpMapPoints,
-                              double timestamp);
-  void PublishKF(ORB_SLAM3::KeyFrame* pKF);
-  void ParseCamInfo(sensor_msgs::CameraInfo& msg) const;
-  void GetCamInfo(cv::FileStorage& fSettings);
-  
+//  CameraPoseVisualization cameraposevisual;
 
-  ros::NodeHandle nh_;
-  
-  double transform_tolerance_;
+protected:
+    // Update state and publish data
+    void Update(Sophus::SE3f Tcw, double timestamp = 0);
 
-  // Node's name
-  std::string mNodeName;
+    // Pointer to ORB_SLAM3 threads
+    // System
+    ORB_SLAM3::System *mORB_SLAM3;
+    // Tracking
+    ORB_SLAM3::Tracking *mpTracking{};
+    // Local Mapping
+    ORB_SLAM3::LocalMapping *mpLocalMapping;  // Used
+    // Loop Closing
+    //  ORB_SLAM3::LoopClosing* mpLoopClosing{};
+    // Map Drawer
+    ORB_SLAM3::MapDrawer *mpMapDrawer{};  // Used
+    // Atlas
+    ORB_SLAM3::Atlas *mpAtlas{};  // Used
 
-  // Are we using IMU?
-  bool mbIMU;
-  bool should_start_publish_ = false;
+    // ORB_SLAM3 variables
+    ORB_SLAM3::System::eSensor mSensor;
+    // Path variables
+    std::string strOutputFile;
 
-  // Frame IDs for Odometry Publish
-  std::string world_frame_id_;
-  
-  std::string point_cloud_frame_id_;
-  std::string target_frame_id_;
-  std::string camera_link_id_;
+    std::string left_cam_frame_id_;
+private:
+    // Functions for Publish
+    void PublishPoseAsTransform(const Sophus::SE3f &Twc, double timestamp);
 
-  // Radius for drawing
-  const float r = 5;
+    void PublishPoseAsOdometry(const Sophus::SE3d &Twc, double timestamp);
 
-  std::string strVocFile;
-  std::string strSettingsFile;
-  bool mbViewer;
+    void PublishMapPointsAsPCL2(std::vector<ORB_SLAM3::MapPoint *> vpMapPoints,
+                                double timestamp);
 
-  // Publish variables
-  // Map
-  image_transport::ImageTransport image_transport_;
-  std::unique_ptr<tf2_ros::Buffer> tf_;
-  std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
-  std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
+    void PublishKF(ORB_SLAM3::KeyFrame *pKF);
 
-  image_transport::Publisher mDebugImagePub;
-  ros::Publisher mPosePub;
-  ros::Publisher mMapPointsPub;
+    void ParseCamInfo(sensor_msgs::CameraInfo &msg) const;
 
-  // KF for Depth Estimation
-  ros::Publisher mKFPosePub;
-  image_transport::Publisher mKFDebugImagePub;
-  ros::Publisher mMPsObsbyKFPub;
-  ros::Publisher mKFsFeaturesPub;
-  ros::Publisher mKFsCamInfoPub;
-  //
-  ros::Publisher ready_pub_;
+    void GetCamInfo(cv::FileStorage &fSettings);
 
-  //  Saving a copy of camera parameters in case that we need it for depth est.
-  int camWidth, camHeight;
-  double fx, fy, cx, cy;
-  double k1, k2, t1, t2;
-  rosbag::Bag bag;
 
-  Eigen::Matrix4f T_ROS_ORB,T_ORB_ROS;
-  Sophus::SE3f spT_ROS_ORB,spT_ORB_ROS;
+    ros::NodeHandle nh_;
 
-  // Robot state
-  double mTimestamp;
-  Sophus::SE3f spTwc;
-  // Drawer
-  cv::Scalar standardColor = cv::Scalar(0, 255, 0);
+    double transform_tolerance_;
 
-  Eigen::AngleAxisd rot_ros_to_cv_map_frame_;
+    // Node's name
+    std::string mNodeName;
+
+    // Are we using IMU?
+    bool mbIMU;
+    bool should_start_publish_ = false;
+
+    // Frame IDs for Odometry Publish
+    std::string world_frame_id_;
+
+    std::string point_cloud_frame_id_;
+    std::string target_frame_id_;
+    std::string camera_link_id_;
+
+    // Radius for drawing
+    const float r = 5;
+
+    std::string strVocFile;
+    std::string strSettingsFile;
+    bool mbViewer;
+
+    // Publish variables
+    // Map
+    image_transport::ImageTransport image_transport_;
+    std::unique_ptr <tf2_ros::Buffer> tf_;
+    std::shared_ptr <tf2_ros::TransformBroadcaster> tf_broadcaster_;
+    std::shared_ptr <tf2_ros::TransformListener> tf_listener_;
+
+    image_transport::Publisher mDebugImagePub;
+    ros::Publisher mPosePub;
+    ros::Publisher mMapPointsPub;
+
+    // KF for Depth Estimation
+    ros::Publisher mKFPosePub;
+    image_transport::Publisher mKFDebugImagePub;
+    ros::Publisher mMPsObsbyKFPub;
+    ros::Publisher mKFsFeaturesPub;
+    ros::Publisher mKFsCamInfoPub;
+    //
+    ros::Publisher ready_pub_;
+
+    //  Saving a copy of camera parameters in case that we need it for depth est.
+    int camWidth, camHeight;
+    double fx, fy, cx, cy;
+    double k1, k2, t1, t2;
+    rosbag::Bag bag;
+
+    Eigen::Matrix4f T_ROS_ORB, T_ORB_ROS;
+    Sophus::SE3f spT_ROS_ORB, spT_ORB_ROS;
+
+    // Robot state
+    double mTimestamp;
+    Sophus::SE3f spTwc;
+    // Drawer
+    cv::Scalar standardColor = cv::Scalar(0, 255, 0);
+
+    Eigen::AngleAxisd rot_ros_to_cv_map_frame_;
 };
 
 #endif  // VSLAM_NODE_H

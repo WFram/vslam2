@@ -72,6 +72,8 @@ catkin_package(
 add_library(${PROJECT_NAME} SHARED
         ORB_SLAM3_ROS/src/utils/Utils.cpp
         ORB_SLAM3_ROS/include/utils/Utils.h
+        ORB_SLAM3_ROS/src/utils/CameraPoseVisualization.cpp
+        ORB_SLAM3_ROS/include/utils/CameraPoseVisualization.h
         ORB_SLAM3_ROS/include/viewer.h
         ORB_SLAM3_ROS/src/viewer.cpp
         )
@@ -149,14 +151,14 @@ target_link_libraries(${PROJECT_NAME}_stereo
 #         ${LIBS_ROS}
 #         ${PROJECT_NAME}
 #         )
-add_executable(${PROJECT_NAME}_stereo_inertial_offline_new
-        ORB_SLAM3_ROS/src/ros_stereo_inertial_offline_new.cc
-        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
-
-target_link_libraries(${PROJECT_NAME}_stereo_inertial_offline_new
-        ${LIBS_ROS}
-        ${PROJECT_NAME}
-        )
+#add_executable(${PROJECT_NAME}_stereo_inertial_offline_new
+#        ORB_SLAM3_ROS/src/ros_stereo_inertial_offline_new.cc
+#        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
+#
+#target_link_libraries(${PROJECT_NAME}_stereo_inertial_offline_new
+#        ${LIBS_ROS}
+#        ${PROJECT_NAME}
+#        )
 
 #add_executable(${PROJECT_NAME}_mono_inertial_offline_new
 #        ORB_SLAM3_ROS/src/ros_mono_inertial_offline_new.cc

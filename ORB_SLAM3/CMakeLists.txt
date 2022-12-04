@@ -5,7 +5,7 @@ IF (NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Release)
 ENDIF ()
 
-set(Pangolin_DIR "/home/wfram/Pangolin/build/src")
+set(Pangolin_DIR "/home/wfram/vslam2_ws/src/vslam2/ORB_SLAM3/Thirdparty/Pangolin/build/src")
 #Pangolin_DIR:PATH=/usr/local/lib/cmake/Pangolin
 
 MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
@@ -49,13 +49,18 @@ MESSAGE(${OpenCV_VERSION})
 
 find_package(Eigen3 3.1.0 REQUIRED)
 #find_package(Pangolin REQUIRED  PATHS /home/itmo/Code/local_lib)
-find_package(Pangolin REQUIRED PATHS /home/wfram/Pangolin/build/src)
-#find_package(Pangolin REQUIRED)
+#find_package(Pangolin REQUIRED PATHS /home/wfram/Pangolin/build/src)
+
+# Use local paths in case it does not work
+find_package(Pangolin REQUIRED)
+#find_package(Pangolin REQUIRED PATHS /home/wfram/vslam2_ws/src/vslam2/ORB_SLAM3/Thirdparty/Pangolin/build/src)
 
 find_package(DBoW2 REQUIRED)
 find_package(g2o REQUIRED)
 
-#find_package(Sophus REQUIRED)
+# Use local paths in case it does not work
+find_package(Sophus REQUIRED)
+#find_package(Sophus REQUIRED PATHS /home/wfram/vslam2_ws/src/vslam2/ORB_SLAM3/Thirdparty/Sophus/build)
 
 #include(/home/itmo/Code/local_lib/share/sophus/cmake/SophusConfig.cmake)
 
@@ -71,13 +76,14 @@ include_directories(
         ${PROJECT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/include/CameraModels
+        # Last commit used thirdparty version
         ${PROJECT_SOURCE_DIR}/Thirdparty/Sophus
         ${EIGEN3_INCLUDE_DIR}
         ${Pangolin_INCLUDE_DIRS}
         ${TBB_INCLUDE_DIR}
         ${g2o_INCLUDE_DIR}
         ${DBoW2_INCLUDE_DIR}
-        ${Sophus_INCLUDE_DIRS}
+#        ${Sophus_INCLUDE_DIRS}
 )
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
@@ -155,5 +161,4 @@ target_link_libraries(${PROJECT_NAME}
         ${Sophus_LIBRARIES}
         )
 
-message("Pangolin lib: " ${Pangolin_LIBRARIES})
 message("Eigen lib: " ${EIGEN3_LIBS})
