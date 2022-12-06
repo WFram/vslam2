@@ -4,4 +4,4 @@ ORB_SLAM3/.cmake
 ORB_SLAM3/.vscode
 ORB_SLAM3/build
 ORB_SLAM3/lib
-ORB_SLAM3/Vocabulary/**
+ORB_SLAM3/Vocabulary/ORBvoc.txt.tar.gz

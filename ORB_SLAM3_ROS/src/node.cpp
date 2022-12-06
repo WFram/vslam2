@@ -19,6 +19,7 @@ node::node(ORB_SLAM3::System::eSensor sensor,
           tf_broadcaster_(std::make_shared<tf2_ros::TransformBroadcaster>()),
           tf_listener_(std::make_shared<tf2_ros::TransformListener>(*tf_)) {
 //          cameraposevisual(CameraPoseVisualization(1, 0, 0, 1)) {
+
     mNodeName = ros::this_node::getName();
     mbIMU = (sensor == ORB_SLAM3::System::IMU_MONOCULAR ||
              sensor == ORB_SLAM3::System::IMU_STEREO);
@@ -33,13 +34,21 @@ void node::Init() {
     nh_.getParam("Vocab_path", strVocFile);
     nh_.getParam("Params", strSettingsFile);
     nh_.getParam("Visualize", mbViewer);
-    // Retrieve frame id parameters
-    nh_.getParam("world_frame_id", world_frame_id_);  // world_frame
-    // nh_.getParam("left_camera_frame_id",
-    //              left_cam_frame_id_);  // left_camera_frame
-    nh_.getParam("point_cloud_frame_id", point_cloud_frame_id_);  // point cloud
 
-    nh_.getParam("camera_link", camera_link_id_);
+    // Retrieve frame id parameters
+    ros::param::get("map_frame_id", map_frame_id_);
+    ros::param::get("odom_frame_id", odom_frame_id_);
+    ros::param::get("left_camera_frame_id",
+                    left_cam_frame_id_);
+
+    std::cout << "map_frame_id " << map_frame_id_ << std::endl;
+    std::cout << "odom_frame_id " << odom_frame_id_ << std::endl;
+    std::cout << "left_camera_frame_id " << left_cam_frame_id_ << std::endl;
+
+    T_ros_cam.block<3, 3>(0, 0) = Eigen::Quaternionf(T_ros_cam.block<3, 3>(0, 0))
+            .normalized()
+            .toRotationMatrix();
+    T_ros_cam_se3_ = Sophus::SE3f(T_ros_cam);
 
     // Publish pose's timestamp in the future
     transform_tolerance_ = 0.5;
@@ -110,18 +119,18 @@ void node::Init() {
 void node::Update(Sophus::SE3f Tcw, double timestamp) {
 
     // Only start to public out after initialize when we used IMU
-//  if(!should_start_publish_ && mbIMU){
-//    if (!mpAtlas->GetCurrentMap()->GetIniertialBA2()) {
-//      should_start_publish_ = false;
-//      return;
-//    }
-//    else  {
-//      should_start_publish_ = true;
-//      ready_pub_.publish(std_msgs::Empty());
-//    }
-//  }
-//  else if(!should_start_publish_ && !mbIMU)
-//    should_start_publish_ = true;
+  if(!should_start_publish_ && mbIMU){
+    if (!mpAtlas->GetCurrentMap()->GetIniertialBA2()) {
+      should_start_publish_ = false;
+      return;
+    }
+    else  {
+      should_start_publish_ = true;
+      ready_pub_.publish(std_msgs::Empty());
+    }
+  }
+  else if(!should_start_publish_ && !mbIMU)
+    should_start_publish_ = true;
 
     ros::Time ros_time;
     ros_time.fromSec(timestamp);
@@ -138,8 +147,10 @@ void node::PublishPoseAsTransform(const Sophus::SE3f &Twc, double timestamp) {
     geometry_msgs::TransformStamped tfMsg;
     nav_msgs::Odometry pose_msg;
 
+    // WF: if you want to return back to Twc, just replace Two
+    Sophus::SE3f Two = Twc * T_ros_cam_se3_.inverse();
     Eigen::Affine3d map_to_camera_affine(
-            Eigen::Translation3d(Twc.translation().cast<double>()) * Twc.unit_quaternion().matrix().cast<double>());
+            Eigen::Translation3d(Two.translation().cast<double>()) * Two.unit_quaternion().matrix().cast<double>());
     // Transform map frame from CV coordinate system to ROS coordinate system
     if (!mbIMU)
         map_to_camera_affine.prerotate(rot_ros_to_cv_map_frame_);
@@ -147,7 +158,7 @@ void node::PublishPoseAsTransform(const Sophus::SE3f &Twc, double timestamp) {
     // Create odometry message and update it with current camera pose
     auto stamp = Utils::toROSTime(timestamp);
     pose_msg.header.stamp = stamp;
-    pose_msg.header.frame_id = world_frame_id_;
+    pose_msg.header.frame_id = odom_frame_id_;
     pose_msg.child_frame_id = left_cam_frame_id_;
     if (!mbIMU)
         pose_msg.pose.pose = tf2::toMsg(map_to_camera_affine * rot_ros_to_cv_map_frame_.inverse());
@@ -156,7 +167,7 @@ void node::PublishPoseAsTransform(const Sophus::SE3f &Twc, double timestamp) {
 
     mPosePub.publish(pose_msg);
 
-    Utils::toTransformMsg(Twc, &tfMsg.transform);
+    Utils::toTransformMsg(Two, &tfMsg.transform);
 
     if (!mbIMU)
         tfMsg = tf2::eigenToTransform(map_to_camera_affine * rot_ros_to_cv_map_frame_.inverse());
@@ -166,19 +177,22 @@ void node::PublishPoseAsTransform(const Sophus::SE3f &Twc, double timestamp) {
     // Send map->camera_link transform. Set publish_tf to false if not using TF
 
     try {
+        geometry_msgs::TransformStamped map_to_camera_link_msg;
         if (!mbIMU)
-            ROS_ERROR("CAN'T PUBLISH TF, BECAUSE OF NO IMU");
+            map_to_camera_link_msg = tf2::eigenToTransform(
+                    map_to_camera_affine * rot_ros_to_cv_map_frame_.inverse());
+        else
+            map_to_camera_link_msg = tf2::eigenToTransform(map_to_camera_affine);
 
 //        auto optical_link_to_camera_link = tf_->lookupTransform("zed2_left_camera_optical_frame", "zed2_camera_frame",
 //                                                                ros::Time(0));
 //        Eigen::Affine3d optical_link_to_camera_link_affine = tf2::transformToEigen(
 //                optical_link_to_camera_link.transform);
-        auto map_to_camera_link_msg = tf2::eigenToTransform(map_to_camera_affine);
 //        auto map_to_camera_link_msg = tf2::eigenToTransform(map_to_camera_affine * optical_link_to_camera_link_affine);
         auto transform_timestamp = stamp;
         map_to_camera_link_msg.header.stamp = transform_timestamp;
-        map_to_camera_link_msg.header.frame_id = "map";
-        map_to_camera_link_msg.child_frame_id = "zed2_camera_frame";
+        map_to_camera_link_msg.header.frame_id = odom_frame_id_;
+        map_to_camera_link_msg.child_frame_id = left_cam_frame_id_;
         tf_broadcaster_->sendTransform(map_to_camera_link_msg);
     }
     catch (tf2::TransformException &ex) {
@@ -209,7 +223,7 @@ void node::PublishMapPointsAsPCL2(std::vector<ORB_SLAM3::MapPoint *> vpMapPoints
     //  const int num_channels = 3;  // x y z
     //
     //  cloud.header.stamp = Utils::toROSTime(timestamp);
-    //  cloud.header.frame_id = world_frame_id_;
+    //  cloud.header.frame_id = map_frame_id_;
     //  cloud.height = 1;
     //  cloud.width = vpMapPoints.size();
     //  cloud.is_bigendian = false;
@@ -249,7 +263,7 @@ void node::PublishKF(ORB_SLAM3::KeyFrame *pKF) {
     Sophus::SE3f Tcw = pKF->GetPose();
     Tcw = Tcw * spT_ORB_ROS;
     // Get MapPoints
-    std::vector < ORB_SLAM3::MapPoint * > vpMapPoints = pKF->GetMapPointMatches();
+    std::vector<ORB_SLAM3::MapPoint *> vpMapPoints = pKF->GetMapPointMatches();
 
     // Get timestamps
     double timestamp = pKF->mTimeStamp;
@@ -272,7 +286,7 @@ void node::PublishKF(ORB_SLAM3::KeyFrame *pKF) {
     // Map Points
     sensor_msgs::PointCloud cloud;
     cloud.header.stamp = Utils::toROSTime(timestamp);
-    cloud.header.frame_id = world_frame_id_;
+    cloud.header.frame_id = map_frame_id_;
     cloud.points.resize(vpMapPoints.size());
     // we'll also add an intensity channel to the cloud
     cloud.channels.resize(1);
@@ -502,7 +516,7 @@ bool node::SaveTrajectoryBag(const std::string &file_path) { //for rosservice ok
     topicKFInfo = std::string(mNodeName + "/KF_CamInfo");
     topicKFImage = std::string(mNodeName + "/KF_DebugImage");
 
-    std::vector < ORB_SLAM3::KeyFrame * > vpKFs = mpAtlas->GetAllKeyFrames();
+    std::vector<ORB_SLAM3::KeyFrame *> vpKFs = mpAtlas->GetAllKeyFrames();
     sort(vpKFs.begin(), vpKFs.end(), ORB_SLAM3::KeyFrame::lId);
 
     // Transform all keyframes so that the first keyframe is at the origin.
@@ -531,7 +545,7 @@ bool node::SaveTrajectoryBag(const std::string &file_path) { //for rosservice ok
         // KF Pose
         nav_msgs::Odometry PoseMsg;
         PoseMsg.header.stamp = Utils::toROSTime(pKF->mTimeStamp);
-        PoseMsg.header.frame_id = world_frame_id_;
+        PoseMsg.header.frame_id = odom_frame_id_;
         PoseMsg.child_frame_id = left_cam_frame_id_;
 
         // Sophus::SE3f spTcw = pKF->GetPose() * spTwo;
@@ -556,11 +570,11 @@ bool node::SaveTrajectoryBag(const std::string &file_path) { //for rosservice ok
         // Map Points
         //    std::cout << "Map points msg" << std::endl;
         // Get MapPoints
-        std::vector < ORB_SLAM3::MapPoint * > vpMapPoints = pKF->GetMapPointMatches();
+        std::vector<ORB_SLAM3::MapPoint *> vpMapPoints = pKF->GetMapPointMatches();
         sensor_msgs::PointCloud cloud;
 
         cloud.header.stamp = Utils::toROSTime(pKF->mTimeStamp);
-        cloud.header.frame_id = world_frame_id_;
+        cloud.header.frame_id = map_frame_id_;
         cloud.points.resize(vpMapPoints.size());
         // we'll also add an intensity channel to the cloud
         cloud.channels.resize(1);

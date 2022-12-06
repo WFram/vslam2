@@ -84,6 +84,8 @@ protected:
     std::string strOutputFile;
 
     std::string left_cam_frame_id_;
+
+    Sophus::SE3f T_ros_cam_se3_;
 private:
     // Functions for Publish
     void PublishPoseAsTransform(const Sophus::SE3f &Twc, double timestamp);
@@ -112,8 +114,8 @@ private:
     bool should_start_publish_ = false;
 
     // Frame IDs for Odometry Publish
-    std::string world_frame_id_;
-
+    std::string map_frame_id_;
+    std::string odom_frame_id_;
     std::string point_cloud_frame_id_;
     std::string target_frame_id_;
     std::string camera_link_id_;
@@ -128,9 +130,9 @@ private:
     // Publish variables
     // Map
     image_transport::ImageTransport image_transport_;
-    std::unique_ptr <tf2_ros::Buffer> tf_;
-    std::shared_ptr <tf2_ros::TransformBroadcaster> tf_broadcaster_;
-    std::shared_ptr <tf2_ros::TransformListener> tf_listener_;
+    std::unique_ptr<tf2_ros::Buffer> tf_;
+    std::shared_ptr<tf2_ros::TransformBroadcaster> tf_broadcaster_;
+    std::shared_ptr<tf2_ros::TransformListener> tf_listener_;
 
     image_transport::Publisher mDebugImagePub;
     ros::Publisher mPosePub;
@@ -157,6 +159,13 @@ private:
     // Robot state
     double mTimestamp;
     Sophus::SE3f spTwc;
+
+    //! Transform robot coord to camera coord
+    // transform from camera to ros world frame
+    Eigen::Matrix4f T_ros_cam = (Eigen::Matrix4f() << 0, 0, 1, 0,
+            -1, 0, 0, 0,
+            0, -1, 0, 0,
+            0, 0, 0, 1).finished();
     // Drawer
     cv::Scalar standardColor = cv::Scalar(0, 255, 0);
 

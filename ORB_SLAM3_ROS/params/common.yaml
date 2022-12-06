@@ -1,0 +1,6 @@
+map_frame_id: "map"
+odom_frame_id: "odom"
+left_camera_frame_id: "zed2_camera_frame"
+
+use_reference_cloud: true
+reference_cloud_path: "/home/wfram/.ros/global_map.pcd"

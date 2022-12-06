@@ -3,6 +3,9 @@ File.version: "1.0"
 #--------------------------------------------------------------------------------------------
 # Camera Parameters. Adjust them!
 #--------------------------------------------------------------------------------------------
+#System.LoadAtlasFromFile: "atlas_501_2"
+#System.SaveAtlasToFile: "atlas_501_stereo_1"
+
 Camera.type: "PinHole"
 
 # Camera calibration and distortion parameters (OpenCV)

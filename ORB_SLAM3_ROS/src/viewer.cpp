@@ -4,28 +4,31 @@ viewer::viewer(const ros::NodeHandle &nh, ORB_SLAM3::LocalMapping *pLocalMapping
                ORB_SLAM3::MapDrawer *pMapDrawer, bool is_imu) :
         nh_(nh), it_(nh), mpLocalMapping_(pLocalMapping), mpFrameDrawer_(pFrameDrawer), mpMapDrawer_(pMapDrawer),
         is_imu_(is_imu), pRefKF(nullptr) {
+
     // set parameters and variable
     set_params();
+
     // broadcasting
     set_advertising();
+
+    // publish reference map
+    if (use_reference_cloud_)
+        publish_reference_cloud();
 }
 
 void viewer::set_params() {
     // Retrieve frame id parameters
-    if (nh_.hasParam("map_frame"))
-        nh_.getParam("map_frame", map_frame_id_);
+    ros::param::get("map_frame_id", map_frame_id_);
+    std::cout << "map_frame_id: " << map_frame_id_ << std::endl;
+    ros::param::get("left_camera_frame_id", left_camera_frame_id_);
+    std::cout << "left_camera_frame_id: " << left_camera_frame_id_ << std::endl;
 
-    if (nh_.hasParam("min_observations"))
-        nh_.getParam("min_observations", min_observations_);
+    ros::param::get("use_reference_cloud", use_reference_cloud_);
+    std::cout << "use_reference_cloud: " << use_reference_cloud_ << std::endl;
+    ros::param::get("reference_cloud_path", reference_cloud_path_);
+    std::cout << "reference_cloud_path: " << reference_cloud_path_ << std::endl;
 
-    if (nh_.hasParam("only_quality_observations"))
-        nh_.getParam("only_quality_observations", only_quality_observations_);
-
-    if (nh_.hasParam("judge_optimized"))
-        nh_.getParam("judge_optimized", judge_optimized_);
-
-    if (nh_.hasParam("min_local_points"))
-        nh_.getParam("min_local_points", min_local_points_);
+    pcl::io::loadPCDFile(reference_cloud_path_, reference_cloud);
 
     T_ros_cam.block<3, 3>(0, 0) = Eigen::Quaternionf(T_ros_cam.block<3, 3>(0, 0))
             .normalized()
@@ -33,7 +36,9 @@ void viewer::set_params() {
     T_ros_cam_se3_ = Sophus::SE3f(T_ros_cam);
 }
 
+
 void viewer::set_advertising() {
+
     debug_frame_publisher = it_.advertise(debug_frame_topic, 1);
 
     path_publisher = nh_.advertise<nav_msgs::Path>(path_topic, 1);
@@ -43,6 +48,22 @@ void viewer::set_advertising() {
 
     local_map_points_publisher =
             nh_.advertise<sensor_msgs::PointCloud2>(local_map_points_topic, 1);
+
+    reference_map_points_publisher =
+            nh_.advertise<sensor_msgs::PointCloud2>(reference_map_points_topic, 1, true);
+
+    global_map_saver = nh_.advertiseService<std_srvs::Empty::Request,
+            std_srvs::Empty::Response>("/vslam2/save_global_map", srv_cbk);
+}
+
+void viewer::publish_reference_cloud() {
+    sensor_msgs::PointCloud2 cloud_msg;
+    pcl::toROSMsg(reference_cloud, cloud_msg);
+    cloud_msg.header.frame_id = map_frame_id_;
+    cloud_msg.header.stamp = ros::Time::now();
+
+    reference_map_points_publisher.publish(cloud_msg);
+    ROS_INFO("Publish reference cloud as latched");
 }
 
 void viewer::run() {
@@ -50,11 +71,9 @@ void viewer::run() {
     ros::Rate rate(30);
     while (ros::ok()) {
         if (is_start_) {
-            // publish_map_points_new(stamp_);
             publish_local_map_point(stamp_);
-            publish_map_point(stamp_);
+//            publish_map_point(stamp_);
             publish_debug_image(stamp_);
-//            publish_path(stamp_);
             setIsStart(false);
         }
         // check termination flag
@@ -119,113 +138,25 @@ void viewer::setIsStart(bool isStart) {
 }
 
 void viewer::request_terminate() {
-    std::lock_guard <std::mutex> lock(mtx_terminate_);
+    std::lock_guard<std::mutex> lock(mtx_terminate_);
     terminate_is_requested_ = true;
 }
 
 bool viewer::is_terminated() {
-    std::lock_guard <std::mutex> lock(mtx_terminate_);
+    std::lock_guard<std::mutex> lock(mtx_terminate_);
     return is_terminated_;
 }
 
 bool viewer::terminate_is_requested() {
-    std::lock_guard <std::mutex> lock(mtx_terminate_);
+    std::lock_guard<std::mutex> lock(mtx_terminate_);
     return terminate_is_requested_;
 }
 
 void viewer::terminate() {
-    std::lock_guard <std::mutex> lock(mtx_terminate_);
+    std::lock_guard<std::mutex> lock(mtx_terminate_);
     is_terminated_ = true;
     is_start_ = false;
 }
-
-void viewer::publish_map_point(ros::Time &stamp) {
-    ORB_SLAM3::Map *pActiveMap = mpMapDrawer_->mpAtlas->GetCurrentMap();
-    if (!pActiveMap) return;
-
-    const std::vector<ORB_SLAM3::MapPoint *> &vpMPs = pActiveMap->GetAllMapPoints();
-
-    const std::vector<ORB_SLAM3::MapPoint *> &vpRefMPs = pActiveMap->GetReferenceMapPoints();
-
-    set < ORB_SLAM3::MapPoint * > spRefMPs(vpRefMPs.begin(), vpRefMPs.end());
-
-    if (vpMPs.empty()) return;
-
-    //declare and initialize red, green, blue component values
-    // dark color for inactive map points
-    uint8_t r(15), g(15), b(15);
-
-    sensor_msgs::PointCloud2 map_point_msg;
-    map_point_msg.header.frame_id = "map";
-    map_point_msg.header.stamp = stamp;
-    int num_channels = 4;// x y z, rgb
-    map_point_msg.height = 1;
-    map_point_msg.width = vpMPs.size();
-    map_point_msg.is_bigendian = false;
-    map_point_msg.is_dense = false;
-    map_point_msg.point_step = num_channels * sizeof(float);
-    map_point_msg.row_step = map_point_msg.point_step * map_point_msg.width;
-    map_point_msg.fields.resize(num_channels);
-
-    std::string channel_id[] = {"x", "y", "z", "rgb"};
-
-    for (int i = 0; i < num_channels; i++) {
-        map_point_msg.fields[i].name = channel_id[i];
-        map_point_msg.fields[i].offset = i * sizeof(float);
-        map_point_msg.fields[i].count = 1;
-        map_point_msg.fields[i].datatype = sensor_msgs::PointField::FLOAT32;
-    }
-    map_point_msg.data.resize(map_point_msg.row_step * map_point_msg.height);
-
-    unsigned char *cloud_data_ptr = &(map_point_msg.data[0]);
-
-    float data_array[num_channels];
-
-    // int nRelPts = 0;
-    // for (size_t i = 0; i < vpMPs.size(); i++) {
-    //     const auto lm = vpMPs.at(i);
-    //     if (lm->GetFound() >= 400)
-    //         nRelPts++;
-    // }
-
-    // if (nRelPts < 10)
-    // return;
-
-    for (size_t i = 0; i < vpMPs.size(); i++) {
-        const auto lm = vpMPs.at(i);
-        if (lm->isBad()) continue;
-
-//        if (lm->nObs < 40) continue;
-        // if (lm->GetFound() < 400) continue;
-        // color is encoded strangely, but efficiently.  Stored as a 4-byte "float", but
-        // interpreted as individual byte values for 3 colors
-        // bits 0-7 are blue value, bits 8-15 are green, bits 16-23 are red;
-        // Can build the rgb encoding with bit-level operations:
-        uint32_t rgb = (static_cast<uint32_t>(r) << 16 |
-                        static_cast<uint32_t>(g) << 8 | static_cast<uint32_t>(b));
-        // and encode these bits as a single-precision (4-byte) float:
-        float rgb_float = *reinterpret_cast<float *>(&rgb);
-        Eigen::Vector3f pos_w;
-        if (is_imu_)
-            pos_w = lm->GetWorldPos();
-        else
-            pos_w = T_ros_cam_se3_ * lm->GetWorldPos();
-        data_array[0] = pos_w.x(); // x.
-        data_array[1] = pos_w.y(); // y.
-        data_array[2] = pos_w.z(); // z.
-        data_array[3] = rgb_float;
-        memcpy(cloud_data_ptr + (i * map_point_msg.point_step),
-               data_array,
-               num_channels * sizeof(float));
-    }
-
-    map_points_publisher.publish(map_point_msg);
-}
-
-// 1) Sophus::SE3f mTcw; (viewer.h)
-// 2) ros_stereo_inertial...
-// 3) T_ros_cam_se3_ * mTcw (viewer.cpp)
-// 4) set frames for messages
 
 void viewer::publish_local_map_point(ros::Time &stamp) {
     ORB_SLAM3::Map *pActiveMap = mpMapDrawer_->mpAtlas->GetCurrentMap();
@@ -252,78 +183,67 @@ void viewer::publish_local_map_point(ros::Time &stamp) {
 
     // Declare and initialize red, green, blue component values
     // Dark color for inactive map points
-    uint8_t r(15), g(15), b(15);
-    int num_channels = 4; // x y z, rgb
-    std::string channel_id[] = {"x", "y", "z", "rgb"};
+    PointCloudXYZ::Ptr p_local_cloud(new PointCloudXYZ);
 
-    sensor_msgs::PointCloud2 local_map_point_msg;
-    local_map_point_msg.header.frame_id = "map";
-    local_map_point_msg.header.stamp = stamp;
-    local_map_point_msg.height = 1;
-    local_map_point_msg.width = spLocalMPs.size();
-    local_map_point_msg.is_dense = false;
-    local_map_point_msg.is_bigendian = false;
-    local_map_point_msg.point_step = num_channels * sizeof(float);
-    local_map_point_msg.row_step = local_map_point_msg.point_step * local_map_point_msg.width;
-    local_map_point_msg.fields.resize(num_channels);
-
-    for (int i = 0; i < num_channels; i++) {
-        local_map_point_msg.fields[i].name = channel_id[i];
-        local_map_point_msg.fields[i].offset = i * sizeof(float);
-        local_map_point_msg.fields[i].count = 1;
-        local_map_point_msg.fields[i].datatype = sensor_msgs::PointField::FLOAT32;
-    }
-
-    local_map_point_msg.data.resize(local_map_point_msg.row_step * local_map_point_msg.height);
-
-    unsigned char *local_cloud_data_ptr = &(local_map_point_msg.data[0]);
-
-    float data_array[num_channels];
-
-    int nRelPts = 0;
-    for (auto spLocalMP: spLocalMPs) {
-        if (judge_optimized_) {
-            if (spLocalMP->nOpt >= min_observations_)
-                nRelPts++;
-        } else {
-            if (((spLocalMP->GetFound() >= min_observations_) && !only_quality_observations_) ||
-                (spLocalMP->nObs >= min_observations_) && only_quality_observations_)
-                nRelPts++;
-        }
-    }
-
-    if (nRelPts < min_local_points_)
-        return;
-
-    size_t counter = 0;
     for (auto spLocalMP: spLocalMPs) {
         if (spLocalMP->isBad()) continue;
 
-        if (spLocalMP->GetFound() < min_observations_) continue;
+        Eigen::Vector3f pos_w, pos_cam;
+        if (is_imu_) {
+            pos_w = spLocalMP->GetWorldPos();
+            pos_cam = T_ros_cam_se3_ * mTcw * spLocalMP->GetWorldPos();
+        } else
+            pos_w = T_ros_cam_se3_ * spLocalMP->GetWorldPos();
 
-        // Can build the rgb encoding with bit-level operations:
-        uint32_t rgb = (static_cast<uint32_t>(r) << 16 |
-                        static_cast<uint32_t>(g) << 8 | static_cast<uint32_t>(b));
+        pcl::PointXYZ point;
+        point.x = pos_cam(0);
+        point.y = pos_cam(1);
+        point.z = pos_cam(2);
+        p_local_cloud->push_back(point);
+    }
 
-        // and encode these bits as a single-precision (4-byte) float:
-        float rgb_float = *reinterpret_cast<float *>(&rgb);
+    if (p_local_cloud->size() < 1)
+        return;
+
+    sensor_msgs::PointCloud2 cloud_msg;
+    pcl::toROSMsg(*p_local_cloud, cloud_msg);
+    cloud_msg.header.frame_id = left_camera_frame_id_;
+    cloud_msg.header.stamp = stamp;
+
+    local_map_points_publisher.publish(cloud_msg);
+}
+
+void viewer::publish_map_point(ros::Time &stamp) {
+    ORB_SLAM3::Map *pActiveMap = mpMapDrawer_->mpAtlas->GetCurrentMap();
+    if (!pActiveMap) return;
+
+    const std::vector<ORB_SLAM3::MapPoint *> &vpMPs = pActiveMap->GetAllMapPoints();
+
+    const std::vector<ORB_SLAM3::MapPoint *> &vpRefMPs = pActiveMap->GetReferenceMapPoints();
+
+    set<ORB_SLAM3::MapPoint *> spRefMPs(vpRefMPs.begin(), vpRefMPs.end());
+
+    if (vpMPs.empty()) return;
+
+    PointCloudXYZ::Ptr p_global_cloud(new PointCloudXYZ);
+
+    for (size_t i = 0; i < vpMPs.size(); i++) {
+        const auto lm = vpMPs.at(i);
+        if (lm->isBad()) continue;
 
         Eigen::Vector3f pos_w;
         if (is_imu_)
-            pos_w = spLocalMP->GetWorldPos();
+            pos_w = lm->GetWorldPos();
         else
-            pos_w = T_ros_cam_se3_ * spLocalMP->GetWorldPos();
-
-        data_array[0] = (float) pos_w.x();// x.
-        data_array[1] = (float) pos_w.y();// y.
-        data_array[2] = (float) pos_w.z();// z.
-        data_array[3] = rgb_float;
-
-        memcpy(local_cloud_data_ptr + (counter * local_map_point_msg.point_step),
-               data_array,
-               num_channels * sizeof(float));
-        counter++;
+            pos_w = T_ros_cam_se3_ * lm->GetWorldPos();
+        pcl::PointXYZ point(pos_w.x(), pos_w.y(), pos_w.z());
+        p_global_cloud->push_back(point);
     }
 
-    local_map_points_publisher.publish(local_map_point_msg);
+    sensor_msgs::PointCloud2 cloud_msg;
+    pcl::toROSMsg(*p_global_cloud, cloud_msg);
+    cloud_msg.header.frame_id = map_frame_id_;
+    cloud_msg.header.stamp = stamp;
+
+    map_points_publisher.publish(cloud_msg);
 }

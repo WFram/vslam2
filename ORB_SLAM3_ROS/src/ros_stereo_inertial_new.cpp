@@ -50,7 +50,7 @@ public:
 
     void GrabImu(const sensor_msgs::ImuConstPtr &imu_msg);
 
-    queue <sensor_msgs::ImuConstPtr> imuBuf;
+    queue<sensor_msgs::ImuConstPtr> imuBuf;
     std::mutex mBufMutex;
 };
 
@@ -79,7 +79,7 @@ public:
     void SavingTrajectory();
 
 private:
-    queue <sensor_msgs::ImageConstPtr> imgLeftBuf, imgRightBuf;
+    queue<sensor_msgs::ImageConstPtr> imgLeftBuf, imgRightBuf;
     std::mutex mBufMutexLeft, mBufMutexRight;
 
 private:
@@ -89,11 +89,11 @@ private:
     bool mbRectify = true;
 
 private:
-    cv::Ptr <cv::CLAHE> mClahe = cv::createCLAHE(3.0, cv::Size(8, 8));
+    cv::Ptr<cv::CLAHE> mClahe = cv::createCLAHE(3.0, cv::Size(8, 8));
 };
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "ORB_SLAM3");
+    ros::init(argc, argv, "ORB_SLAM3", ros::init_options::NoSigintHandler);
     ros::NodeHandle nh("~");
     image_transport::ImageTransport image_transport(nh);
     ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME,
@@ -217,7 +217,7 @@ void VIO::SyncWithImu() {
             imgRightBuf.pop();
             this->mBufMutexRight.unlock();
 
-            vector <ORB_SLAM3::IMU::Point> vImuMeas;
+            vector<ORB_SLAM3::IMU::Point> vImuMeas;
             mpImuGb->mBufMutex.lock();
             if (!mpImuGb->imuBuf.empty()) {
                 // Load imu measurements from buffer

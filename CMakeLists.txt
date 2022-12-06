@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.4.6)
 project(vslam2)
 
 IF (NOT CMAKE_BUILD_TYPE)
-    SET(CMAKE_BUILD_TYPE Release)
+    SET(CMAKE_BUILD_TYPE Debug)
 ENDIF ()
 
 add_definitions(-std=c++14)
@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
         std_msgs
         cv_bridge
         image_transport
+        pcl_conversions
         tf
         tf2_geometry_msgs
         tf2_ros
@@ -28,6 +29,7 @@ if (NOT OpenCV_FOUND)
 endif ()
 
 find_package(Eigen3 3.1.0 REQUIRED)
+find_package(PCL REQUIRED)
 find_package(Sophus REQUIRED)
 
 #find_package(Pangolin REQUIRED  PATHS /home/vuong/Code/local_lib) origin
@@ -56,6 +58,7 @@ set(LIBS_ROS
         ${g2o_LIBRARY}
         ${PROJECT_SOURCE_DIR}/ORB_SLAM3/lib/libORB_SLAM3.so
         ${OpenCV_LIBS}
+        ${PCL_LIBS}
         ${catkin_LIBRARIES}
         ${Sophus_LIBRARIES}
         -lboost_system
@@ -90,6 +93,7 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/ORB_SLAM3_ROS/include
         ${PROJECT_SOURCE_DIR}/ORB_SLAM3_ROS/include/Utils
         ${g2o_INCLUDE_DIR}
+        ${PCL_INCLUDE_DIRS}
         ${DBoW2_INCLUDE_DIR}
         ${Pangolin_INCLUDE_DIRS}
         ${TBB_INCLUDE_DIR}

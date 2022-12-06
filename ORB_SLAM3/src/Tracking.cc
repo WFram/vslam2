@@ -1923,8 +1923,13 @@ void Tracking::PrintTimeStats() {
         std::chrono::steady_clock::now();
 #endif
 
+
             // Initial camera pose estimation using motion model or relocalization (if
             // tracking is lost)
+            // If we start localizing too early, then there will be too few matches. Rather, once the IMU is
+            // initialized, localization gets worse
+//            if (pCurrentMap->isImuInitialized())
+//                mbOnlyTracking = true;
             if (!mbOnlyTracking) {
                 // State OK
                 // Local Mapping is activated. This is the normal behaviour, unless
@@ -2018,6 +2023,7 @@ void Tracking::PrintTimeStats() {
                     bOK = Relocalization();
                 } else {
                     if (!mbVO) {
+                        Verbose::PrintMess("IMU. State LOST", Verbose::VERBOSITY_NORMAL);
                         // In last frame we tracked enough MapPoints in the map
                         if (mbVelocity) {
                             bOK = TrackWithMotionModel();
