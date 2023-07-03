@@ -195,6 +195,8 @@ void viewer::publish_local_map_point(ros::Time &stamp) {
         } else
             pos_w = T_ros_cam_se3_ * spLocalMP->GetWorldPos();
 
+        // if you want to publish world points just set pos_w instead of pos_cam in the point filling
+        // AND change the frame to map
         pcl::PointXYZ point;
         point.x = pos_cam(0);
         point.y = pos_cam(1);
