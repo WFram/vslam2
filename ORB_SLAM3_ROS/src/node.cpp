@@ -113,24 +113,25 @@ void node::Init() {
     // Empty message to start nvblx
     ready_pub_ = nh_.advertise<std_msgs::Empty>("ready_to_go", 1, true);
 
+    trajectory_saver = nh_.advertiseService<std_srvs::Empty::Request,
+            std_srvs::Empty::Response>("/vslam2/save_trajectory", srv_cbk);
+
     ROS_INFO("vslam2 started!");
 }
 
 void node::Update(Sophus::SE3f Tcw, double timestamp) {
 
     // Only start to public out after initialize when we used IMU
-  if(!should_start_publish_ && mbIMU){
-    if (!mpAtlas->GetCurrentMap()->GetIniertialBA2()) {
-      should_start_publish_ = false;
-      return;
-    }
-    else  {
-      should_start_publish_ = true;
-      ready_pub_.publish(std_msgs::Empty());
-    }
-  }
-  else if(!should_start_publish_ && !mbIMU)
-    should_start_publish_ = true;
+    if (!should_start_publish_ && mbIMU) {
+        if (!mpAtlas->GetCurrentMap()->GetIniertialBA2()) {
+            should_start_publish_ = false;
+            return;
+        } else {
+            should_start_publish_ = true;
+            ready_pub_.publish(std_msgs::Empty());
+        }
+    } else if (!should_start_publish_ && !mbIMU)
+        should_start_publish_ = true;
 
     ros::Time ros_time;
     ros_time.fromSec(timestamp);
@@ -495,6 +496,21 @@ void node::GetCamInfo(cv::FileStorage &fSettings) {
     camWidth = (int) fSettings["Camera1.width"].real();
     camHeight = (int) fSettings["Camera1.height"].real();
     ROS_WARN_COND(b_miss_params, "MISSING CAMERA PARAMS");
+}
+
+void node::SavingTrajectory() {
+    // Stop all threads
+    mORB_SLAM3->Shutdown();
+    ROS_INFO("Saving trajectory...");
+    // Save trajectory
+    if (strOutputFile.empty()) {
+        mORB_SLAM3->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
+        mORB_SLAM3->SaveTrajectoryTUM("FrameTrajectory.txt");
+    } else {
+        mORB_SLAM3->SaveKeyFrameTrajectoryTUM("kf_" + strOutputFile + ".txt"); // this
+        mORB_SLAM3->SaveTrajectoryTUM("f_" + strOutputFile + ".txt"); //this ahh oke that
+    }
+    ROS_INFO("Saved trajectory!"); // i check with stdout
 }
 
 bool node::SaveTrajectoryBag(const std::string &file_path) { //for rosservice oke no problems.

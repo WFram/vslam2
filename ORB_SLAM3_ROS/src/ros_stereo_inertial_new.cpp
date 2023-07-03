@@ -76,7 +76,7 @@ public:
 public:
     void setmbClahe(bool mbClahe);
 
-    void SavingTrajectory();
+//    void SavingTrajectory();
 
 private:
     queue<sensor_msgs::ImageConstPtr> imgLeftBuf, imgRightBuf;
@@ -138,7 +138,7 @@ int main(int argc, char **argv) {
     ros::spin();
     sync_thread.join();
     thread.join();
-    // mVIO.SavingTrajectory();
+//    mVIO.SavingTrajectory();
 
     return 0;
 }
@@ -271,25 +271,25 @@ VIO::~VIO() {
     delete mpAtlas;
 }
 
-void VIO::SavingTrajectory() {
-    // Stop all threads
-    mORB_SLAM3->Shutdown();
-    ROS_INFO("Saving trajectory...");
-    // Save trajectory
-    if (mSensor == ORB_SLAM3::System::MONOCULAR ||
-        mSensor == ORB_SLAM3::System::IMU_MONOCULAR) {
-        mORB_SLAM3->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt"); // then this file should be save also
-    } else {
-        if (strOutputFile.empty()) {
-            mORB_SLAM3->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
-            mORB_SLAM3->SaveTrajectoryTUM("FrameTrajectory.txt");
-        } else {
-            mORB_SLAM3->SaveKeyFrameTrajectoryTUM("kf_" + strOutputFile + ".txt"); // this
-            mORB_SLAM3->SaveTrajectoryTUM("f_" + strOutputFile + ".txt"); //this ahh oke that
-        }
-    }
-    ROS_INFO("Saved trajectory!"); // i check with stdout
-}
+//void VIO::SavingTrajectory() {
+//    // Stop all threads
+//    mORB_SLAM3->Shutdown();
+//    ROS_INFO("Saving trajectory...");
+//    // Save trajectory
+//    if (mSensor == ORB_SLAM3::System::MONOCULAR ||
+//        mSensor == ORB_SLAM3::System::IMU_MONOCULAR) {
+//        mORB_SLAM3->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt"); // then this file should be save also
+//    } else {
+//        if (strOutputFile.empty()) {
+//            mORB_SLAM3->SaveKeyFrameTrajectoryTUM("KeyFrameTrajectory.txt");
+//            mORB_SLAM3->SaveTrajectoryTUM("FrameTrajectory.txt");
+//        } else {
+//            mORB_SLAM3->SaveKeyFrameTrajectoryTUM("kf_" + strOutputFile + ".txt"); // this
+//            mORB_SLAM3->SaveTrajectoryTUM("f_" + strOutputFile + ".txt"); //this ahh oke that
+//        }
+//    }
+//    ROS_INFO("Saved trajectory!"); // i check with stdout
+//}
 
 void ImuGrabber::GrabImu(const sensor_msgs::ImuConstPtr &imu_msg) {
     mBufMutex.lock();

@@ -56,6 +56,8 @@ public:
     // Saved trajectory and map as bag file
     bool SaveTrajectoryBag(const std::string &file_path);
 
+    void SavingTrajectory();
+
     viewer *ros_viewer_ = nullptr;
 
 //  CameraPoseVisualization cameraposevisual;
@@ -146,6 +148,14 @@ private:
     ros::Publisher mKFsCamInfoPub;
     //
     ros::Publisher ready_pub_;
+
+    std::function<bool(std_srvs::Empty::Request &req,
+                       std_srvs::Empty::Response &res)> srv_cbk = [this](std_srvs::Empty::Request &req,
+                                                                         std_srvs::Empty::Response &res) {
+        SavingTrajectory();
+        return true;
+    };
+    ros::ServiceServer trajectory_saver;
 
     //  Saving a copy of camera parameters in case that we need it for depth est.
     int camWidth, camHeight;
