@@ -1,0 +1,46 @@
+<launch>
+    <rosparam command="load" file="$(find vslam2)/ORB_SLAM3_ROS/params/common.yaml"/>
+
+    <node name="vslam2" pkg="vslam2"
+          type="vslam2_stereo" output="screen">
+
+        <!--    ORB_SLAM3 arguments -->
+        <param name="Vocab_path" type="string" value="$(find vslam2)/ORB_SLAM3/Vocabulary/ORBvoc.txt"/>
+<!--   TODO: Change to IROS     -->
+        <param name="Params" type="string" value="$(find vslam2)/ORB_SLAM3_ROS/params/Stereo-Inertial/KAIST_2.yaml"/>
+        <param name="Output_name" type="string" value="kaist"/>
+
+        <!--    Enable the Pangolin visualization-->
+        <param name="Visualize" type="bool" value="true"/>
+
+        <!--    Preprocess the images-->
+        <param name="Do_Rectify" type="bool" value="false"/>
+        <param name="Do_Equalize" type="bool" value="false"/>
+        <param name="Do_Resize" type="bool" value="false"/>
+
+        <!--    Target frame id for tf-->
+        <param name="target_frame_id" type="string" value="base_link"/>
+
+        <!--    Topics-->
+<!--        <remap from="/camera/left/image_raw" to="/zed2/zed_node/left/image_rect_gray"/>-->
+<!--        <remap from="/camera/right/image_raw" to="/zed2/zed_node/right/image_rect_gray"/>-->
+        <remap from="/camera/left/image_raw" to="/stereo/left/image_raw" />
+        <remap from="/camera/right/image_raw" to="/stereo_cam/right/image_raw" />
+<!--        <remap from="/camera/image_raw" to="/zed2/zed_node/left/image_rect_color" />-->
+        <remap from="/imu" to="/imu/data_raw"/>
+
+    </node>
+
+<!--    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find vslam2)/ORB_SLAM3_ROS/rviz/rviz_vio.rviz"/>-->
+
+    <!--  <node pkg="tf2_ros" type="static_transform_publisher" name="zed2_left_camera_optical_frame_zed2_left_camera_optical_frame2_broadcaster"-->
+    <!--        args="0 0 0 0 0 0 1 zed2_base_link zed2_left_camera_optical_frame" />-->
+    <!--  <node pkg="tf2_ros" type="static_transform_publisher" name="zed2_left_camera_optical_frame_Left_frame_broadcaster"-->
+    <!--        args="0 0 0 0 0 0 1 zed2_left_camera_optical_frame Left_frame" />-->
+    <!--  <node pkg="tf2_ros" type="static_transform_publisher" name="zed2_left_camera_optical_frame_zed2_camera_frame_broadcaster"-->
+    <!--        args="0.01 0. 0.        0.5 -0.5 0.5 0.5       zed2_left_camera_optical_frame zed2_camera_frame"/>-->
+    <!--  <node pkg="tf2_ros" type="static_transform_publisher" name="zed2_camera_frame_zed2_base_link_broadcaster"-->
+    <!--        args="0. -0.06 0.        0. 0. 0. 1.       zed2_camera_frame zed2_camera_center"/>-->
+    <!--  <node pkg="tf2_ros" type="static_transform_publisher" name="zed2_camera_center_zed2_base_link2_broadcaster"-->
+    <!--        args="0. 0. -0.015        0. -0.0249969 0. 0.9996875       zed2_camera_center zed2_base_link2"/>-->
+</launch>
