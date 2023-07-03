@@ -99,14 +99,14 @@ include_directories(
         ${TBB_INCLUDE_DIR}
 )
 
-add_executable(${PROJECT_NAME}_stereo_inertial
-        ORB_SLAM3_ROS/src/ros_stereo_inertial.cc
-        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
-
-target_link_libraries(${PROJECT_NAME}_stereo_inertial
-        ${LIBS_ROS}
-        ${PROJECT_NAME}
-        )
+#add_executable(${PROJECT_NAME}_stereo_inertial
+#        ORB_SLAM3_ROS/src/ros_stereo_inertial.cc
+#        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
+#
+#target_link_libraries(${PROJECT_NAME}_stereo_inertial
+#        ${LIBS_ROS}
+#        ${PROJECT_NAME}
+#        )
 add_executable(${PROJECT_NAME}_stereo_inertial_new
         ORB_SLAM3_ROS/src/ros_stereo_inertial_new.cpp
         ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
@@ -139,14 +139,14 @@ target_link_libraries(${PROJECT_NAME}_mono_inertial
         ${LIBS_ROS}
         ${PROJECT_NAME}
         )
-add_executable(${PROJECT_NAME}_stereo
-        ORB_SLAM3_ROS/src/ros_stereo.cc
-        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
-
-target_link_libraries(${PROJECT_NAME}_stereo
-        ${LIBS_ROS}
-        ${PROJECT_NAME}
-        )
+#add_executable(${PROJECT_NAME}_stereo
+#        ORB_SLAM3_ROS/src/ros_stereo.cc
+#        ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
+#
+#target_link_libraries(${PROJECT_NAME}_stereo
+#        ${LIBS_ROS}
+#        ${PROJECT_NAME}
+#        )
 # add_executable(${PROJECT_NAME}_stereo_offline
 #         ORB_SLAM3_ROS/src/ros_stereo_offline.cc
 #         ORB_SLAM3_ROS/src/node.cpp ORB_SLAM3_ROS/include/node.h)
