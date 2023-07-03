@@ -160,7 +160,7 @@ cv::Mat VIO::GetImage(const sensor_msgs::ImageConstPtr& img_msg) {
 void VIO::SyncWithImu() {
   while (ros::ok()) {
     cv::Mat image;
-    double timeshift = 0.03356973236020965;
+    double timeshift = 0.00;
     if (!imgBuf.empty() && !mpImuGb->imuBuf.empty()) {
       const double tIm = imgBuf.front()->header.stamp.toSec() + timeshift;
       if (tIm == 0) std::cout << "New image timestamp: " << tIm << std::endl;
