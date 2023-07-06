@@ -1,0 +1,113 @@
+%YAML:1.0
+
+#--------------------------------------------------------------------------------------------
+# Camera Parameters. Adjust them!
+#--------------------------------------------------------------------------------------------
+File.version: "1.0"
+
+Camera.type: "PinHole"
+
+# Camera calibration and distortion parameters (OpenCV) 
+Camera1.fx: 6.1680273437500000e+02
+Camera1.fy: 6.1675103759765625e+02
+Camera1.cx: 4.3503417968750000e+02
+Camera1.cy: 2.4290113830566406e+02
+
+Camera1.k1: 0.0
+Camera1.k2: 0.0
+Camera1.p1: 0.0
+Camera1.p2: 0.0
+
+Camera.width: 848
+Camera.height: 480
+
+# Camera frames per second 
+Camera.fps: 30
+
+# Color order of the images (0: BGR, 1: RGB. It is ignored if images are grayscale)
+Camera.RGB: 1
+
+Stereo.ThDepth: 40.0
+Stereo.b: 0.0747
+
+RGBD.DepthMapFactor: 1000.0
+
+System.Kernel: 0
+
+#--------------------------------------------------------------------------------------------
+# IMU Parameters
+#--------------------------------------------------------------------------------------------
+
+IMU.T_b_c1: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: f
+  data:  [9.9994661512557681e-01, 5.2758229534989399e-03, 8.8844015591920088e-03, 2.0096886902999999e-02,
+          -5.2847897511125097e-03, 9.9998554919748395e-01, 9.8610014344746111e-04, -5.0785536877800000e-03,
+          -8.8790706826883566e-03, -1.0329996949199204e-03, 9.9996004670958838e-01, -1.1505126021800000e-02,
+          0., 0., 0., 1. ]
+
+IMU.NoiseGyro: 3.0619389333450590e-02  #5.1480301408446394e-06 #(T265_1hour_square_root) 2.2689e-03 #2.9399585994142933e-03 (T265_1hour) #0.055335   (D455_1hour) #3.0619389333450590e-03
+IMU.NoiseAcc:  2.4688952269151677e-01  #6.6952452471014112e-05 #(T265_1hour_square_root) 8.1824e-03 #1.8944022044921720e-02 (T265_1hour) #0.1571     (D455_1hour) #2.4688952269151677e-02
+IMU.GyroWalk:  1.6565292353593328e-04  #4.9999999873762135e-07 #(T265_1hour_square_root) 7.0711e-04 #2.1075650081844720e-05 (T265_1hour) #4.0700e-03 (D455_1hour) #1.6565292353593328e-05
+IMU.AccWalk:   5.2813197466286793e-03  #9.9999997473787516e-05 #(T265_1hour_square_root) 1.0000e-02 #6.9885217893000603e-04 (T265_1hour) #0.022981   (D455_1hour) #5.2813197466286793e-04
+IMU.Frequency: 655.0
+
+#--------------------------------------------------------------------------------------------
+# Wheel Odometry Parameters
+#--------------------------------------------------------------------------------------------
+
+# NOT USED
+# Transformation from vehicle to body-frame (imu)
+Odom.T_b_o: !!opencv-matrix
+  rows: 4
+  cols: 4
+  dt: f
+  data:  [
+    -0.00113729264458,    0.999965055267,  0.00828219834348,   0.0545104875654,
+    -0.00206245548802, -0.00828453162111,    0.999963555742,   -0.915839044531,
+    0.999997226418,  0.00112016953136,  0.00207180535294,   -0.228417979642,
+    0,                 0,                 0,                 1]
+
+Odom.NoiseX: 0.1
+Odom.NoiseY: 0.1
+Odom.NoiseRotZ: 0.1
+
+# Discard far points in the case outdoor
+System.thFarPoints: 20.0  # In outdoors, we ignore points too far away
+
+#--------------------------------------------------------------------------------------------
+# ORB Parameters
+#--------------------------------------------------------------------------------------------
+
+# ORB Extractor: Number of features per image
+ORBextractor.nFeatures: 1000
+
+# ORB Extractor: Scale factor between levels in the scale pyramid 	
+ORBextractor.scaleFactor: 1.2
+
+# ORB Extractor: Number of levels in the scale pyramid	
+ORBextractor.nLevels: 8
+
+# ORB Extractor: Fast threshold
+# Image is divided in a grid. At each cell FAST are extracted imposing a minimum response.
+# Firstly we impose iniThFAST. If no corners are detected we impose a lower value minThFAST
+# You can lower these values if your images have low contrast			
+ORBextractor.iniThFAST: 20
+ORBextractor.minThFAST: 7
+
+#--------------------------------------------------------------------------------------------
+# Viewer Parameters
+#--------------------------------------------------------------------------------------------
+Viewer.KeyFrameSize: 0.05
+Viewer.KeyFrameLineWidth: 1.0
+Viewer.GraphLineWidth: 0.9
+Viewer.PointSize: 2.0
+Viewer.CameraSize: 0.08
+Viewer.CameraLineWidth: 3.0
+Viewer.ViewpointX: 0.0
+Viewer.ViewpointY: -0.7
+Viewer.ViewpointZ: -1.8
+Viewer.ViewpointF: 500.0
+Viewer.imageViewScale: 1.0
+
